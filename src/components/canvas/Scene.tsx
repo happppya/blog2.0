@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, ComponentProps } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Points, PointMaterial } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
@@ -8,7 +8,9 @@ import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as random from "maath/random/dist/maath-random.esm";
 import type { Points as ThreePoints } from "three";
 
-function ParticleSwarm(props: any) {
+type ParticleSwarmProps = ComponentProps<typeof Points>;
+
+function ParticleSwarm(props: ParticleSwarmProps) {
   const ref = useRef<ThreePoints>(null);
   // Create a sphere of 5000 particles
   const [sphere] = useState(() => random.inSphere(new Float32Array(5000), { radius: 1.5 }));

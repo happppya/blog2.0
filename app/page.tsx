@@ -1,8 +1,7 @@
 import HeroOverlay from "@/src/components/ui/HeroOverlay";
 import ArticleGrid from "@/src/components/ui/ArticleGrid";
 import ScrollProgress from "@/src/components/ui/ScrollProgress";
-import SceneWrapper from "@/src/components/canvas/SceneWrapper";
-
+import CanvasBackground from "@/src/components/canvas/CanvasBackground";
 const getPosts = async () => [
   { id: '1', title: 'Mastering R3F Performance', excerpt: 'Techniques for locking 60fps in React Three Fiber.', tags: ['React', '3D', 'Performance'] },
   { id: '2', title: 'The Future of Server Components', excerpt: 'Why RSCs change everything for frontend architecture.', tags: ['Next.js', 'Architecture'] },
@@ -16,9 +15,8 @@ export default async function Home() {
     <main className="relative min-h-screen bg-[#050505] text-[#ededed] selection:bg-[#00f3ff] selection:text-[#050505]">
       <ScrollProgress />
       
-      <div className="fixed inset-0 z-0">
-        <SceneWrapper />
-      </div>
+      {/* Scroll-linked dynamic background */}
+      <CanvasBackground />
 
       <div className="relative z-10 pointer-events-none">
         <HeroOverlay />
