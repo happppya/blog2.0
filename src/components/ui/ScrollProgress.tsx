@@ -27,7 +27,7 @@ export default function ScrollProgress() {
 
   return (
     <motion.div
-      className="fixed top-0 left-0 right-0 h-[2px] bg-[#00f3ff] origin-left z-50 shadow-[0_0_10px_#00f3ff]"
+      className="fixed top-0 left-0 right-0 h-[2px] bg-primary origin-left z-50 shadow-[0_0_10px_var(--color-primary)]"
       style={{ scaleX }}
       role="progressbar"
       aria-label="Reading progress"

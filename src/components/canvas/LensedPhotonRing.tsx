@@ -1,8 +1,10 @@
 "use client";
 
 import { useRef, useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { ShaderMaterial } from "three";
+import { easing } from "maath";
 
 const VERTEX_SHADER = `
   varying vec3 vLocalPos;
@@ -68,7 +70,9 @@ export function LensedPhotonRing({
   pinch = 2.5,
   angle = 0    
 }: LensedPhotonRingProps) {
+
   const materialRef = useRef<ShaderMaterial>(null);
+  const groupRef = useRef<THREE.Group>(null);
 
   const uniforms = useMemo(() => ({
     color: { value: new THREE.Color(color) },
@@ -78,19 +82,42 @@ export function LensedPhotonRing({
     angle: { value: angle }
   }), [color, innerRadius, stretch, pinch, angle]);
 
+  useFrame((state, delta) => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.pinch.value =
+        pinch - Math.sin(state.clock.elapsedTime * 5) * 0.05;
+    }
+
+    if (groupRef.current) {
+      easing.dampE(
+        groupRef.current.rotation,
+        [
+          Math.PI / 2 + 0.7 + state.pointer.y / 8,
+          Math.PI + 0.5,
+          Math.PI / 2 - 0.12 + state.pointer.x / 8 + state.pointer.y / 8
+        ],
+        0.5,
+        delta
+      );
+    }
+  });
+
   return (
-    <mesh rotation={[Math.PI / 2 + 0.8, Math.PI + 0.5, Math.PI / 2 - 0.3]}>
-      <planeGeometry args={[24, 24]} />
-      <shaderMaterial
-        ref={materialRef}
-        vertexShader={VERTEX_SHADER}
-        fragmentShader={FRAGMENT_SHADER}
-        uniforms={uniforms}
-        transparent={true}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-        side={THREE.DoubleSide} 
-      />
-    </mesh>
+    <group ref={groupRef}>
+      <mesh>
+        <planeGeometry args={[24, 24]} />
+
+        <shaderMaterial
+          ref={materialRef}
+          vertexShader={VERTEX_SHADER}
+          fragmentShader={FRAGMENT_SHADER}
+          uniforms={uniforms}
+          transparent
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
   );
 }
