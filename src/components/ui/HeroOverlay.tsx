@@ -79,10 +79,12 @@ export default function HeroOverlay() {
             variants={itemVariants}
             className="relative group max-w-md mb-10"
           >
-            {/* Console Visual Wrapper */}
-            <div className="absolute -inset-y-3 -inset-x-4 bg-primary/[0.03] border-l border-primary/40 backdrop-blur-[4px] shadow-[10px_0_30px_-15px_rgba(143,185,247,0.1)]" />
+            {/* Console Visual Wrapper - Added w-full and inset-x-0 */}
+            <div className="absolute -inset-y-3 inset-x-0 w-full bg-white/2 border-l-2 border-primary/40 backdrop-blur-sm shadow-[10px_0_30px_-15px_rgba(143,185,247,0.1)] -z-10" />
 
-            <div className="relative py-1 pr-2 overflow-hidden">
+            <div className="relative py-1 pl-6">
+              {" "}
+              {/* Increased padding for better alignment */}
               <p className="text-primary/90 font-mono text-sm md:text-base leading-relaxed tracking-tight">
                 <span className="text-primary/70 font-bold mr-2">
                   Software Engineer.
@@ -149,9 +151,7 @@ export default function HeroOverlay() {
               </span>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary/50 animate-pulse" />
-                <span className="text-[9px] font-mono text-muted/50">
-                  LIVE
-                </span>
+                <span className="text-[9px] font-mono text-muted/50">LIVE</span>
               </div>
             </div>
 
@@ -187,10 +187,11 @@ export default function HeroOverlay() {
             <div className="pt-4 border-t border-white/5 flex justify-between items-center">
               <span className="text-[9px] font-mono text-primary/30 tracking-[0.3em]">
                 ALEXANDER LU
-                <br/>axlu810@gmail.com
-                <br/>706-616-0644
+                <br />
+                axlu810@gmail.com
+                <br />
+                706-616-0644
               </span>
-              
             </div>
           </div>
         </motion.div>
