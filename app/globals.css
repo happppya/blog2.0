@@ -4,9 +4,9 @@
   --color-background: #050505;
   --color-foreground: #ededed;
   --color-muted: #9e9e9e;
-  --color-accent: #a6c6ff;
-  --color-accent-glow: rgba(130, 175, 255, 0.4);
-  --color-accent-purple: #bd00ff;
+  --color-primary: #a6c6ff;
+  --color-primary-glow: rgba(130, 175, 255, 0.4);
+  --color-secondary: #bd00ff;
 
   --font-merriweather: var(--font-merriweather), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: var(--font-fira-code), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -43,6 +43,6 @@ body {
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-accent);
+    background: var(--color-primary);
   }
 }
