@@ -4,15 +4,12 @@ import { motion, Variants } from "framer-motion";
 import Link from "next/link";
 import {
   Terminal as IconTerminal,
-  CpuIcon as IconCpu,
   Activity as IconActivity,
-  Layers as IconLayers,
-  Box as IconBox,
-  Globe as IconGlobe,
   Folder as IconFolder,
   Code as IconCode,
   History as IconHistory,
   Zap as IconZap,
+  Layers as IconLayers
 } from "lucide-react";
 import {
   FaGithub as IconGithub,
@@ -44,11 +41,9 @@ const telemetryVariants: Variants = {
 export default function HeroOverlay() {
   return (
     <section className="relative z-10 w-full min-h-screen px-6 md:px-12 lg:px-24 flex items-center pointer-events-none">
-      {/* Subtle Grid Pattern Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
 
       <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative">
-        {/* LEFT COLUMN: Identity */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -56,17 +51,16 @@ export default function HeroOverlay() {
           className="lg:col-span-7 pointer-events-auto flex flex-col items-start text-left"
         >
           {/* Status Badge */}
-          <motion.div
-            variants={itemVariants}
-            className="flex items-center gap-3 mb-6 px-3 py-1 rounded-sm bg-primary/5 border border-primary/20 backdrop-blur-sm"
-          >
-            <IconActivity size={12} className="text-primary animate-pulse" />
-            <span className="text-[10px] font-mono text-primary uppercase tracking-[0.25em]">
-              AVAILABLE
-            </span>
+          <motion.div variants={itemVariants} className="mb-6">
+            <div className="flex items-center gap-3 px-3 py-1 rounded-sm bg-black/60 border border-primary/30 shadow-[inset_0_0_12px_rgba(143,185,247,0.15)]">
+              <IconActivity size={12} className="text-primary animate-pulse" />
+              <span className="text-[10px] font-mono text-primary uppercase tracking-[0.25em]">
+                AVAILABLE
+              </span>
+            </div>
           </motion.div>
 
-          {/* Scaled-down Title */}
+          {/* Title */}
           <motion.h1
             variants={itemVariants}
             className="text-5xl md:text-7xl lg:text-8xl font-bold font-merriweather mb-6 text-transparent bg-clip-text bg-gradient-to-br from-white via-[#8fb9f7] to-[#4f56f7] leading-[1.1] filter drop-shadow-sm"
@@ -74,17 +68,10 @@ export default function HeroOverlay() {
             alexander
           </motion.h1>
 
-          {/* Narrower Subtitle with Console Background */}
-          <motion.div
-            variants={itemVariants}
-            className="relative group max-w-md mb-10"
-          >
-            {/* Console Visual Wrapper - Added w-full and inset-x-0 */}
-            <div className="absolute -inset-y-3 inset-x-0 w-full bg-white/2 border-l-2 border-primary/40 backdrop-blur-sm shadow-[10px_0_30px_-15px_rgba(143,185,247,0.1)] -z-10" />
-
-            <div className="relative py-1 pl-6">
-              {" "}
-              {/* Increased padding for better alignment */}
+          {/* Subtitle */}
+          <motion.div variants={itemVariants} className="relative group max-w-md mb-10">
+            <div className="absolute -inset-y-3 inset-x-0 w-full backdrop-blur-md bg-gradient-to-r from-black/80 via-black/50 to-transparent border-l-2 border-primary/50 shadow-[10px_0_30px_-15px_rgba(143,185,247,0.2)] z-0" />
+            <div className="relative py-1 pl-6 z-10">
               <p className="text-primary/90 font-mono text-sm md:text-base leading-relaxed tracking-tight">
                 <span className="text-primary/70 font-bold mr-2">
                   Software Engineer.
@@ -96,23 +83,19 @@ export default function HeroOverlay() {
             </div>
           </motion.div>
 
-          {/* Action Interface */}
+          {/* Action Links */}
           <motion.div
             variants={itemVariants}
             className="flex flex-col sm:flex-row items-center gap-8"
           >
             <Link
               href="#articles"
-              className="group relative px-8 py-3.5 bg-transparent border border-primary/30 text-primary font-mono text-xs font-bold uppercase tracking-widest overflow-hidden transition-all hover:border-primary"
+              className="group relative px-8 py-3.5 bg-black/40 border border-primary/30 text-primary font-mono text-xs font-bold uppercase tracking-widest overflow-hidden transition-all hover:border-primary hover:bg-black/60"
             >
-              <div className="absolute inset-0 bg-primary opacity-0 group-hover:opacity-5 transition-opacity" />
-
-              {/* Corner Accents */}
               <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-primary/60" />
               <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-primary/60" />
-
               <span className="relative z-10 flex items-center gap-3">
-                EXECUTE_WORK <IconTerminal size={14} />
+                VIEW WORK <IconTerminal size={14} />
               </span>
             </Link>
 
@@ -136,27 +119,33 @@ export default function HeroOverlay() {
           </motion.div>
         </motion.div>
 
-        {/* RIGHT COLUMN: Integrated Telemetry & Competencies */}
+        {/* Telemetry Card - Fully Opaque & Hardware Styled */}
         <motion.div
           variants={telemetryVariants}
           initial="hidden"
           animate="show"
           className="hidden lg:flex lg:col-span-4 lg:col-start-10 flex-col gap-4 w-70 pointer-events-none select-none"
         >
-          <div className="p-6 border border-white/5 bg-white/[0.02] backdrop-blur-xl rounded-sm relative flex flex-col gap-8">
-            {/* Header */}
-            <div className="flex justify-between items-center border-b border-white/5 pb-4">
-              <span className="text-[10px] font-mono text-primary/80 uppercase tracking-[0.2em]">
-                STATS
+          <div className="p-7 bg-[#0A0A0B] border border-[#222] shadow-[0_25px_65px_-10px_rgba(0,0,0,1)] rounded-sm relative flex flex-col gap-8 overflow-hidden group">
+            
+            {/* Structural Edge Accents */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+            <div className="absolute top-0 left-0 bottom-0 w-0.5 bg-primary/40" />
+            
+            {/* Subtle Inner Ambient Glow */}
+            <div className="absolute -top-16 -right-16 w-32 h-32 bg-primary/10 blur-3xl rounded-full pointer-events-none" />
+
+            <div className="relative z-10 flex justify-between items-center border-b border-white/5 pb-4">
+              <span className="text-[10px] font-mono text-primary/70 uppercase tracking-[0.2em]">
+                SYSTEM STATS
               </span>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary/50 animate-pulse" />
-                <span className="text-[9px] font-mono text-muted/50">LIVE</span>
+              <div className="flex items-center gap-2 px-2 py-0.5 bg-black/50 border border-white/5 rounded-sm">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary/70 animate-pulse" />
+                <span className="text-[9px] font-mono text-white/50">LIVE</span>
               </div>
             </div>
 
-            {/* Meaningful Portfolio Stats */}
-            <div className="space-y-4">
+            <div className="relative z-10 space-y-2">
               {[
                 { label: "Completed Projects", val: "24", icon: IconFolder },
                 { label: "Lines of Code", val: "1.2M", icon: IconCode },
@@ -165,33 +154,34 @@ export default function HeroOverlay() {
               ].map((stat, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between group"
+                  className="flex items-center justify-between group/stat -mx-2 px-2 py-2 rounded-sm transition-colors hover:bg-white/[0.02]"
                 >
                   <div className="flex items-center gap-3">
                     <stat.icon
-                      size={12}
-                      className="text-primary/40 group-hover:text-primary/80 transition-colors"
+                      size={13}
+                      className="text-primary/30 group-hover/stat:text-primary/80 transition-colors"
                     />
-                    <span className="text-[12px] font-mono text-muted/60 uppercase">
+                    <span className="text-[11px] font-mono text-muted/60 uppercase tracking-wide">
                       {stat.label}
                     </span>
                   </div>
-                  <span className="text-xs font-mono text-white/90">
+                  <span className="text-xs font-mono text-white/90 drop-shadow-sm">
                     {stat.val}
                   </span>
                 </div>
               ))}
             </div>
 
-            {/* Footer Tag */}
-            <div className="pt-4 border-t border-white/5 flex justify-between items-center">
-              <span className="text-[9px] font-mono text-primary/30 tracking-[0.3em]">
-                ALEXANDER LU
-                <br />
-                axlu810@gmail.com
-                <br />
-                706-616-0644
-              </span>
+            <div className="relative z-10 pt-5 border-t border-white/5 flex justify-between items-center">
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-mono text-white/80 tracking-[0.2em]">
+                  ALEXANDER LU
+                </span>
+                <span className="text-[9px] font-mono text-primary/40 tracking-wider">
+                  axlu810@gmail.com
+                </span>
+              </div>
+              <IconLayers size={14} className="text-white/10" />
             </div>
           </div>
         </motion.div>

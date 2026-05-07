@@ -110,11 +110,9 @@ function GravitationalSystem() {
 export default function Scene() {
   return (
     <Canvas
-
       camera={{ position: [0, 0, 7.5], fov: 45 }}
       dpr={[1, 1.5]}
-      gl={{ antialias: false, powerPreference: "high-performance" }}
-      className="fixed inset-0 z-[-1]"
+      gl={{ antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: true, alpha: true }}
     >
       <GravitationalSystem />
 
