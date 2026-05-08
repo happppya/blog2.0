@@ -87,8 +87,8 @@ const HeroSubtitle = ({ variants }: { variants: Variants }): JSX.Element => (
   <motion.div variants={variants} className="relative group max-w-md mb-10">
     <div className="absolute -inset-y-3 inset-x-0 w-full backdrop-blur-md bg-gradient-to-r from-black/80 via-black/50 to-transparent border-l-2 border-primary/50 shadow-[10px_0_30px_-15px_rgba(143,185,247,0.2)] z-0" />
     <div className="relative py-1 pl-6 z-10">
-      <p className="text-primary/90 font-mono text-sm md:text-base leading-relaxed tracking-tight">
-        <span className="text-primary/70 font-bold mr-2">
+      <p className="text-primary font-mono text-sm md:text-base leading-relaxed tracking-tight">
+        <span className="text-primary/80 font-bold mr-2">
           Software Engineer.
         </span>
         Engineering high-fidelity, interactive digital experiences. Bridging the
@@ -161,7 +161,7 @@ const TelemetryCard = ({ variants }: { variants: Variants }): JSX.Element => {
       variants={variants}
       initial="hidden"
       animate="show"
-      className="hidden lg:flex lg:col-span-4 lg:col-start-10 flex-col gap-4 w-70 pointer-events-none select-none"
+      className="hidden lg:flex lg:col-span-4 lg:col-start-10 flex-col gap-4 w-70 pointer-events-none"
     >
       <div className="p-7 bg-[#0A0A0B] border border-[#222] shadow-[0_25px_65px_-10px_rgba(0,0,0,1)] rounded-sm relative flex flex-col gap-8 overflow-hidden group">
         <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-primary/30 to-transparent" />
