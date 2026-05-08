@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Merriweather, Fira_Code } from "next/font/google";
+import { Merriweather, Fira_Code, Tinos } from "next/font/google";
 import "./globals.css";
 
-const merriweather = Merriweather({
+const titleFont = Tinos({
   subsets: ["latin"],
-  weight: ["300", "400", "700", "900"],
-  variable: "--font-merriweather",
+  weight: ["400", "700"],
+  variable: "--font-title",
   display: "swap",
 });
 
@@ -35,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body 
-        className={`${merriweather.variable} ${firaCode.variable} font-mono antialiased bg-[#050505] text-[#ededed] selection:bg-[#00f3ff] selection:text-[#050505]`}
+        className={`${titleFont.variable} ${firaCode.variable} font-mono antialiased bg-background text-foreground selection:bg-primary selection:text-background`}
         suppressHydrationWarning
       >
         {children}

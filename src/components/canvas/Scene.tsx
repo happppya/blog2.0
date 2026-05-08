@@ -2,55 +2,14 @@
 
 import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Points, PointMaterial } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
-import { AtmosphericGlow } from "./AtmosphericGlow";
-import { LensedPhotonRing } from "./LensedPhotonRing";
-import type { Group, Points as ThreePoints, Mesh, MeshBasicMaterial } from "three";
+import type { Group, Mesh } from "three";
+
 import { easing } from "maath";
 
-interface AccretionDiskProps {
-  count: number;
-  innerRadius: number;
-  outerRadius: number;
-  color: string;
-  size: number;
-  speed: number;
-}
-
-/**
- * Generates an accretion disk utilizing exponential falloff math.
- */
-function AccretionDisk({ count, innerRadius, outerRadius, color, size, speed }: AccretionDiskProps) {
-  const meshRef = useRef<ThreePoints>(null);
-
-  const positions = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const distanceRatio = Math.pow(Math.random(), 3);
-      const r = innerRadius + distanceRatio * (outerRadius - innerRadius);
-      const theta = Math.random() * 2 * Math.PI;
-
-      // Compresses the Y-axis to create a flat, sharp disk rather than a cloud
-      const y = (Math.random() - 0.5) * (0.1 / (r - innerRadius + 0.2));
-
-      pos[i * 3] = r * Math.cos(theta);
-      pos[i * 3 + 1] = y;
-      pos[i * 3 + 2] = r * Math.sin(theta);
-    }
-    return pos;
-  }, [count, innerRadius, outerRadius]);
-
-  useFrame((_, delta) => {
-    if (meshRef.current) meshRef.current.rotation.y -= delta * speed;
-  });
-
-  return (
-    <Points ref={meshRef} positions={positions} stride={3} frustumCulled={false}>
-      <PointMaterial transparent color={color} size={size} sizeAttenuation={true} depthWrite={false} />
-    </Points>
-  );
-}
+import { AtmosphericGlow } from "./AtmosphericGlow";
+import { LensedPhotonRing } from "./LensedPhotonRing";
+import { AccretionDisk } from "./AccretionDisk";
 
 /**
  * Renders an absolute black sphere to occlude background geometry.
@@ -86,12 +45,12 @@ function GravitationalSystem() {
       <group rotation={[Math.PI / 3, 0, -Math.PI / 6]}>
         <BlackSphere />
 
-        <AccretionDisk count={1500} innerRadius={0.6} outerRadius={10.0} color="#96b9ff" size={0.05} speed={0.05} />
-        <AccretionDisk count={1000} innerRadius={0.7} outerRadius={8.0} color="#96a5ff" size={0.05} speed={0.05} />
-        <AccretionDisk count={100} innerRadius={0.7} outerRadius={8.0} color="#ffbb96" size={0.06} speed={0.04} />
-        <AccretionDisk count={100} innerRadius={0.7} outerRadius={8.0} color="#ff9696" size={0.06} speed={0.03} />
-        <AccretionDisk count={20} innerRadius={0.7} outerRadius={8.0} color="#ffbb96" size={0.09} speed={0.03} />
-        <AccretionDisk count={100} innerRadius={0.7} outerRadius={8.0} color="#cb96ff" size={0.08} speed={0.03} />
+        <AccretionDisk count={1500} innerRadius={0.6} outerRadius={10.0} color="#96b9ff" size={0.05} speed={0.1} />
+        <AccretionDisk count={1000} innerRadius={0.7} outerRadius={8.0} color="#96a5ff" size={0.05} speed={0.09} />
+        <AccretionDisk count={100} innerRadius={0.7} outerRadius={8.0} color="#ffbb96" size={0.06} speed={0.09} />
+        <AccretionDisk count={100} innerRadius={0.7} outerRadius={8.0} color="#ff9696" size={0.06} speed={0.08} />
+        <AccretionDisk count={20} innerRadius={0.7} outerRadius={8.0} color="#ffbb96" size={0.09} speed={0.08} />
+        <AccretionDisk count={100} innerRadius={0.7} outerRadius={8.0} color="#cb96ff" size={0.08} speed={0.08} />
         <AtmosphericGlow color="#5970ff" radius={0.48} />
         <LensedPhotonRing 
           color="#5970ff" 

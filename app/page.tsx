@@ -1,7 +1,9 @@
-import HeroOverlay from "@/src/components/ui/HeroOverlay";
-import ArticleGrid from "@/src/components/ui/ArticleGrid";
-import ScrollProgress from "@/src/components/ui/ScrollProgress";
-import CanvasBackground from "@/src/components/canvas/CanvasBackground";
+import HeroOverlay from "@/components/ui/HeroOverlay";
+import ArticleGrid from "@/components/ui/ArticleGrid";
+import ScrollProgress from "@/components/ui/ScrollProgress";
+import CanvasBackground from "@/components/canvas/CanvasBackground";
+import Navbar from "@/components/ui/Navbar";
+
 const getPosts = async () => [
   { id: '1', title: 'Mastering R3F Performance', excerpt: 'Techniques for locking 60fps in React Three Fiber.', tags: ['React', '3D', 'Performance'] },
   { id: '2', title: 'The Future of Server Components', excerpt: 'Why RSCs change everything for frontend architecture.', tags: ['Next.js', 'Architecture'] },
@@ -20,6 +22,7 @@ export default async function Home() {
 
       <div className="relative z-10 pointer-events-none">
         <HeroOverlay />
+        <Navbar />
         
         <section id="articles" className="min-h-screen max-w-7xl mx-auto px-6 py-24">
           <ArticleGrid posts={posts} />
