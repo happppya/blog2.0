@@ -43,6 +43,7 @@ function GravitationalSystem() {
     <group ref={trackingGroupRef}>
 
       <group rotation={[Math.PI / 3, 0, -Math.PI / 6]}>
+        
         <BlackSphere />
 
         <AccretionDisk count={1500} innerRadius={0.6} outerRadius={10.0} color="#96b9ff" size={0.05} speed={0.1} />

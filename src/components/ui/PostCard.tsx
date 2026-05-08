@@ -80,9 +80,9 @@ export default function PostCard({ post, index }: PostCardProps) {
             <span className="absolute inset-0 z-20" aria-hidden="true" />
             {post.title}
             
-            {/* Terminal Command Prompt Arrow - Uses your purple secondary color for pop! */}
+            {/* Terminal Command Prompt Arrow */}
             <span className="inline-block ml-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-secondary font-black text-sm tracking-tighter">
-              {">>"}
+              {">"}
             </span>
           </Link>
         </h3>
