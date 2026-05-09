@@ -5,6 +5,8 @@ import Navbar from "@/components/global/Navbar";
 import ArticleClusters from "@/components/home/ArticleClusters";
 import EcosystemWorkspace from "@/components/home/EcosystemWorkspace";
 
+import { getFeaturedPosts } from "@/lib/Posts";
+
 export interface Skill {
   name: string;
   category: "Frontend" | "Backend" | "Graphics";
@@ -16,10 +18,6 @@ interface Project {
   description: string;
   techStack: string[];
   link: string;
-}
-
-interface CategorizedPosts {
-  [category: string]: any[]; // Replace 'any' with your Post interface
 }
 
 export async function getSkills(): Promise<Skill[]> {
@@ -76,17 +74,6 @@ export async function getProjects(): Promise<Project[]> {
       link: '/projects/lumina'
     }
   ];
-}
-
-async function getFeaturedPosts(): Promise<CategorizedPosts> {
-  return {
-    "Web Architecture": [
-      { id: '1', title: 'The Future of Server Components', excerpt: 'Why RSCs change everything.', tags: ['Next.js'] },
-    ],
-    "Graphics & Game Dev": [
-      { id: '2', title: 'WebGL Particle Systems', excerpt: 'Custom shaders for high-density math.', tags: ['GLSL'] },
-    ]
-  };
 }
 
 /**
