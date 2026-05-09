@@ -1,65 +1,81 @@
-import { Post, ArticleCategory, ARTICLE_CATEGORIES } from "@/types/ArticleTypes";
+import { promises as fs } from 'fs';
+import path from 'path';
+import matter from 'gray-matter';
+import { cache } from 'react';
+import { PostMeta } from '@/types/Content';
+
+const POSTS_DIR = path.join(process.cwd(), 'src/content/posts');
 
 /**
- * Simulates fetching and organizing MDX posts by category.
+ * Parses the local filesystem to retrieve and sort all MDX post metadata.
+ * Memoized per request lifecycle to eliminate redundant I/O operations.
  *
- * @returns {Promise<Record<ArticleCategory, Post[]>>}
+ * @returns {Promise<PostMeta[]>} Array of post metadata sorted by date descending.
  */
-export async function getFeaturedPosts(): Promise<Record<ArticleCategory, Post[]>> {
-  const allPosts: Post[] = [
-    {
-      id: '1',
-      title: 'The Future of Server Components',
-      excerpt: 'Why RSCs completely alter the mental model for frontend state management.',
-      category: 'Web Architecture',
-      tags: ['Next.js', 'React', 'TypeScript']
-    },
-    {
-      id: '2',
-      title: 'Headless UI Patterns',
-      excerpt: 'Building unstyled, fully accessible component primitives from scratch.',
-      category: 'UI/UX Engineering',
-      tags: ['React', 'Tailwind']
-    },
-    {
-      id: '3',
-      title: 'WebGL Particle Systems',
-      excerpt: 'Writing custom fragment shaders for high-density compute operations.',
-      category: 'Graphics & Game Dev',
-      tags: ['GLSL', 'WebGL', 'Math']
-    },
-    {
-      id: '4',
-      title: 'Optimizing React Three Fiber',
-      excerpt: 'Memory management and draw-call reduction for 60fps browser rendering.',
-      category: 'Graphics & Game Dev',
-      tags: ['Three.js', 'React', 'TypeScript']
-    },
-    {
-      id: '5',
-      title: 'Noise Algorithms in JS',
-      excerpt: 'Implementing Simplex and Perlin noise for infinite terrain generation.',
-      category: 'Procedural Generation',
-      tags: ['Math', 'TypeScript']
-    },
-    {
-      id: '6',
-      title: 'Micro-Interactions with Framer',
-      excerpt: 'Mapping scroll velocity to spatial DOM transforms natively.',
-      category: 'UI/UX Engineering',
-      tags: ['Framer Motion', 'React']
+export const getAllPosts = cache(async (): Promise<PostMeta[]> => {
+  try {
+    const files = await fs.readdir(POSTS_DIR);
+
+    const posts = await Promise.all(
+      files
+        .filter((file) => file.endsWith('.mdx'))
+        .map(async (file) => {
+          const slug = file.replace(/\.mdx$/, '');
+          const filePath = path.join(POSTS_DIR, file);
+          const fileContent = await fs.readFile(filePath, 'utf-8');
+
+          const { data } = matter(fileContent);
+
+          return {
+            slug,
+            title: data.title,
+            excerpt: data.excerpt,
+            importance: data.importance,
+            tags: data.tags || [],
+            date: data.date,
+            excludeFromFeatured: data.excludeFromFeatured ?? false,
+          } as PostMeta;
+        })
+    );
+
+    return posts.sort((a, b) => (new Date(a.date) > new Date(b.date) ? -1 : 1));
+  } catch (error) {
+    console.error(`[FS Error] Failed to read posts directory:`, error);
+    return [];
+  }
+});
+
+/**
+ * Categorizes posts by target tags, routing unmatched posts into an 'OTHER' bucket.
+ *
+ * @param {string[]} targetTags - High-priority tags to segment into distinct UI feeds.
+ * @param {boolean} [onlyFeatured=false] - When true, strips out posts flagged with excludeFromFeatured.
+ * @returns {Promise<Record<string, PostMeta[]>>} Segmented dictionary mapping tags.
+ */
+export async function getCategorizedPosts(
+  targetTags: string[],
+  onlyFeatured: boolean = false
+): Promise<Record<string, PostMeta[]>> {
+  const posts = await getAllPosts(); 
+
+  const categorizedFeed = targetTags.reduce(
+    (acc, tag) => ({ ...acc, [tag]: [] }),
+    { OTHER: [] } as Record<string, PostMeta[]>
+  );
+
+  for (const post of posts) {
+    if (onlyFeatured && (post.excludeFromFeatured || post.importance === "Regular")) {
+      continue;
     }
-  ];
 
-  // Initialize the record with all valid categories to ensure predictable UI order
-  const categorized = {} as Record<ArticleCategory, Post[]>;
-  
-  // @ts-ignore - Tuple iteration type safety workaround
-  ARTICLE_CATEGORIES.forEach(cat => categorized[cat] = []);
+    const matchedTags = post.tags.filter((tag) => targetTags.includes(tag));
 
-  allPosts.forEach(post => {
-    categorized[post.category].push(post);
-  });
+    if (matchedTags.length > 0) {
+      matchedTags.forEach((tag) => categorizedFeed[tag].push(post));
+    } else {
+      categorizedFeed['OTHER'].push(post);
+    }
+  }
 
-  return categorized;
+  return categorizedFeed;
 }

@@ -1,0 +1,33 @@
+---
+title: "The Future of Server Components"
+excerpt: "Why RSCs completely alter the mental model for frontend state management and data fetching architectures."
+importance: "Regular"
+tags: ["Next.js", "React", "TypeScript"]
+date: "2026-05-08"
+excludeFromFeatured: false
+---
+
+The introduction of React Server Components (RSC) is not just a feature update; it is a paradigm shift. We are moving away from the heavy client-side SPAs of the past decade and returning to a server-first mental model, but with the composability of React.
+
+## State Management Rethought
+
+Previously, we relied heavily on global state stores (Redux, Zustand) simply to cache server responses on the client. With RSCs, the server *is* the state for your data.
+
+```tsx
+// This executes entirely on the server. Zero JS sent to the client.
+import { db } from '@/lib/db';
+
+export default async function NodeTelemetryFeed() {
+  const telemetryData = await db.query.telemetry.findMany({
+    orderBy: (t, { desc }) => [desc(t.timestamp)],
+    limit: 100
+  });
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {telemetryData.map(node => (
+        <NodeCard key={node.id} data={node} />
+      ))}
+    </div>
+  );
+}

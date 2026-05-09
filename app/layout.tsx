@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Merriweather, Fira_Code, Tinos } from "next/font/google";
 import "./globals.css";
 
+import Navbar from "@/components/global/Navbar";
+
 const titleFont = Tinos({
   subsets: ["latin"],
   weight: ["400", "700"],
@@ -38,6 +40,7 @@ export default function RootLayout({
         className={`${titleFont.variable} ${firaCode.variable} font-mono antialiased bg-background text-foreground selection:bg-primary selection:text-background`}
         suppressHydrationWarning
       >
+        <Navbar/>
         {children}
       </body>
     </html>

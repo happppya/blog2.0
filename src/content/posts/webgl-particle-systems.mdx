@@ -1,0 +1,35 @@
+---
+title: "WebGL Particle Systems"
+excerpt: "Writing custom fragment shaders for high-density compute operations and 60fps rendering."
+importance: "Featured"
+tags: ["GLSL", "WebGL", "Math"]
+date: "2026-04-12"
+excludeFromFeatured: false
+---
+
+Rendering millions of particles using standard DOM elements or even Canvas 2D is a quick way to crash a browser. To achieve high-fidelity, high-density particle systems, you must bypass the CPU and write instructions directly for the GPU.
+
+## The Compute Shader Approach
+
+For maximum performance in Three.js/R3F, we utilize FBOs (Frame Buffer Objects) to store particle positions as pixel data in a texture. We then use a simulation shader to update those positions every frame.
+
+```glsl
+// simulation.frag
+uniform float uTime;
+uniform sampler2D uPositions;
+
+varying vec2 vUv;
+
+// Simplex noise function omitted for brevity
+
+void main() {
+  vec3 pos = texture2D(uPositions, vUv).rgb;
+  
+  // Calculate noise field based on position and time
+  vec3 noise = snoiseVec3(pos * 0.5 + uTime * 0.1);
+  
+  // Update position
+  pos += noise * 0.01;
+  
+  gl_FragColor = vec4(pos, 1.0);
+}

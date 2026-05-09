@@ -15,18 +15,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
-export interface Skill {
-  name: string;
-  category: "Frontend" | "Backend" | "Graphics";
-}
-
-export interface Project {
-  id: string;
-  title: string;
-  description: string;
-  techStack: string[];
-  link: string;
-}
+import type { Skill, Project } from "@/types/Content";
 
 interface EcosystemWorkspaceProps {
   skills: Skill[];
@@ -104,7 +93,7 @@ function ProjectHUD({
        Project Highlight
       </h2>
 
-      <div className="flex flex-col lg:flex-row gap-6 min-h-[500px]">
+      <div className="flex flex-col lg:flex-row gap-6 min-h-125">
         <ProjectMasterList
           projects={projects}
           activeProjectIndex={activeProjectIndex}
@@ -207,7 +196,7 @@ function ProjectDetailView({ project, hoveredTech, setHoveredTech }: ProjectDeta
 
           <div className="mt-auto flex flex-wrap items-center justify-between gap-4">
             <ul className="flex flex-wrap gap-2">
-              {project.techStack.map((tech) => (
+              {project.techStack.map((tech: string) => (
                 <li key={tech}>
                   <button
                     onMouseEnter={() => setHoveredTech(tech)}
