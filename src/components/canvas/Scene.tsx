@@ -1,9 +1,20 @@
-"use client";
+import { useRef } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import {
+  EffectComposer,
+  Bloom,
+  Vignette,
+  ChromaticAberration,
+  Noise,
+  DepthOfField,
+  SMAA,
+  ToneMapping,
+  HueSaturation,
+  Scanline,
+  Glitch
+} from '@react-three/postprocessing';
+import { BlendFunction, GlitchMode } from 'postprocessing';
 
-import { useRef } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
-import { Vector3, Group, Mesh } from "three";
 import { easing } from "maath";
 
 import { Lensing } from "./GravitationalLensing";
@@ -12,6 +23,11 @@ import type { GravitationalLensingEffect } from "@/effects/GravitationalLensingE
 import { LensedPhotonRing } from "./LensedPhotonRing";
 import { AccretionDisk } from "./AccretionDisk";
 import { AtmosphericGlow } from "./AtmosphericGlow";
+import { Mesh, Group, Vector3 } from 'three';
+
+interface SceneProps {
+  eventSource: HTMLElement;
+}
 
 /**
  * Renders an absolute black sphere to occlude background geometry.
@@ -89,24 +105,39 @@ function GravitationalSystem({ effectRef }: { effectRef: React.RefObject<Gravita
   );
 }
 
-/**
- * Root 3D Scene container with post-processing pipeline.
- */
-export default function Scene() {
+
+export default function Scene({ eventSource }: SceneProps) {
   const lensingRef = useRef<GravitationalLensingEffect>(null);
 
   return (
     <Canvas
+      eventSource={eventSource}
       camera={{ position: [0, 0, 7.5], fov: 45 }}
       dpr={[1, 1.5]}
+      // antialias is false, which is perfect for relying on post-processing SMAA instead
       gl={{ antialias: false, powerPreference: "high-performance", preserveDrawingBuffer: true, alpha: true }}
     >
       <GravitationalSystem effectRef={lensingRef} />
 
-      <EffectComposer>
+      {/* NOTE: Set multisampling={0} when using custom AA like SMAA */}
+      <EffectComposer multisampling={0}>
+
         <Lensing ref={lensingRef} mass={0.8} innerRadius={0.08} outerRadius={0.105} aspect={1.0} />
-        <Bloom luminanceThreshold={0.2} mipmapBlur intensity={2.0} />
-        <Vignette eskil={false} offset={0.3} darkness={0.9} />
+
+        <Bloom
+          luminanceThreshold={0.1} // Lowered slightly so more light catches the bloom
+          luminanceSmoothing={0.9}
+          mipmapBlur
+          intensity={3.5} // High intensity for that Interstellar "Gargantua" feel
+        />
+
+        <Vignette
+          eskil={false}
+          offset={0.35}
+          darkness={0.95}
+          blendFunction={BlendFunction.NORMAL}
+        />
+
       </EffectComposer>
     </Canvas>
   );

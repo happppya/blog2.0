@@ -1,31 +1,121 @@
-import HeroOverlay from "@/components/ui/HeroOverlay";
-import ArticleGrid from "@/components/ui/ArticleGrid";
-import ScrollProgress from "@/components/ui/ScrollProgress";
+import HeroOverlay from "@/components/home/HeroOverlay";
 import CanvasBackground from "@/components/canvas/CanvasBackground";
-import Navbar from "@/components/ui/Navbar";
+import Navbar from "@/components/global/Navbar";
 
-const getPosts = async () => [
-  { id: '1', title: 'Mastering R3F Performance', excerpt: 'Techniques for locking 60fps in React Three Fiber.', tags: ['React', '3D', 'Performance'] },
-  { id: '2', title: 'The Future of Server Components', excerpt: 'Why RSCs change everything for frontend architecture.', tags: ['Next.js', 'Architecture'] },
-  { id: '3', title: 'Building Glassmorphic UI', excerpt: 'Leveraging Tailwind for cyber-aesthetic overlays.', tags: ['CSS', 'Design'] },
-];
+import ArticleClusters from "@/components/home/ArticleClusters";
+import EcosystemWorkspace from "@/components/home/EcosystemWorkspace";
 
+export interface Skill {
+  name: string;
+  category: "Frontend" | "Backend" | "Graphics";
+}
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  techStack: string[];
+  link: string;
+}
+
+interface CategorizedPosts {
+  [category: string]: any[]; // Replace 'any' with your Post interface
+}
+
+export async function getSkills(): Promise<Skill[]> {
+  return [
+    // Frontend
+    { name: 'Next.js', category: 'Frontend' },
+    { name: 'TypeScript', category: 'Frontend' },
+    { name: 'Framer Motion', category: 'Frontend' },
+    { name: 'Tailwind CSS', category: 'Frontend' },
+    { name: 'Zustand', category: 'Frontend' },
+    
+    // Graphics
+    { name: 'Three.js', category: 'Graphics' },
+    { name: 'React Three Fiber', category: 'Graphics' },
+    { name: 'WebGL', category: 'Graphics' },
+    { name: 'GLSL Shaders', category: 'Graphics' },
+    
+    // Backend & Systems
+    { name: 'Node.js', category: 'Backend' },
+    { name: 'PostgreSQL', category: 'Backend' },
+    { name: 'Redis', category: 'Backend' },
+    { name: 'tRPC', category: 'Backend' },
+  ];
+}
+
+export async function getProjects(): Promise<Project[]> {
+  return [
+    {
+      id: 'p1',
+      title: 'Neon Protocol',
+      description: 'A Web3 dashboard featuring real-time data visualization and high-frequency updates. Handles millions of state changes without dropping frames.',
+      techStack: ['Next.js', 'TypeScript', 'Zustand', 'Tailwind CSS'],
+      link: '/projects/neon'
+    },
+    {
+      id: 'p2',
+      title: 'Aura Configurator',
+      description: 'An interactive 3D product configurator for automotive design. Implements complex PBR materials and environmental lighting.',
+      techStack: ['React Three Fiber', 'Three.js', 'TypeScript', 'Zustand'],
+      link: '/projects/aura'
+    },
+    {
+      id: 'p3',
+      title: 'Void Analytics',
+      description: 'High-throughput telemetry ingestion engine. Processes and visualizes server node health in a highly optimized spatial layout.',
+      techStack: ['Next.js', 'Node.js', 'PostgreSQL', 'Redis', 'tRPC'],
+      link: '/projects/void'
+    },
+    {
+      id: 'p4',
+      title: 'Lumina Shader Engine',
+      description: 'A browser-based generative art platform. Allows users to write, compile, and share custom fragment shaders in real-time.',
+      techStack: ['WebGL', 'GLSL Shaders', 'TypeScript', 'Framer Motion'],
+      link: '/projects/lumina'
+    }
+  ];
+}
+
+async function getFeaturedPosts(): Promise<CategorizedPosts> {
+  return {
+    "Web Architecture": [
+      { id: '1', title: 'The Future of Server Components', excerpt: 'Why RSCs change everything.', tags: ['Next.js'] },
+    ],
+    "Graphics & Game Dev": [
+      { id: '2', title: 'WebGL Particle Systems', excerpt: 'Custom shaders for high-density math.', tags: ['GLSL'] },
+    ]
+  };
+}
+
+/**
+ * Main application entry point.
+ * Aggregates all static and dynamic data clusters for the portfolio.
+ *
+ * @returns {JSX.Element}
+ */
 export default async function Home() {
-  const posts = await getPosts();
+  const [skills, projects, featuredPosts] = await Promise.all([
+    getSkills(),
+    getProjects(),
+    getFeaturedPosts()
+  ]);
 
   return (
-    <main className="relative min-h-screen bg-[#050505] text-[#ededed] selection:bg-[#00f3ff] selection:text-[#050505]">
-      <ScrollProgress />
-      
-      {/* Scroll-linked dynamic background */}
+    <main className="relative min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)] selection:bg-[var(--color-primary-glow)] selection:text-[var(--color-foreground)] overflow-hidden">
       <CanvasBackground />
 
-      <div className="relative z-10 pointer-events-none">
-        <HeroOverlay />
+      <div className="relative z-10 w-full flex flex-col gap-32 pb-40">
         <Navbar />
-        
-        <section id="articles" className="min-h-screen max-w-7xl mx-auto px-6 py-24">
-          <ArticleGrid posts={posts} />
+        <HeroOverlay />
+
+        <section id="ecosystem" className="max-w-7xl mx-auto w-full px-6">
+          <EcosystemWorkspace skills={skills} projects={projects} />
+        </section>
+
+        <section id="featured-articles" className="max-w-7xl mx-auto w-full px-6">
+          <ArticleClusters categories={featuredPosts} />
         </section>
       </div>
     </main>

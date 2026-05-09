@@ -1,4 +1,4 @@
-import PostCard, { Post } from "./PostCard";
+import PostCard, { Post } from "@components/home/PostCard";
 
 interface ArticleGridProps {
   posts: Post[];

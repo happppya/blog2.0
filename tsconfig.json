@@ -29,8 +29,8 @@
       "@canvas/*": [
         "./src/components/canvas/*"
       ],
-      "@ui/*": [
-        "./src/components/ui/*"
+      "@components/*": [
+        "./src/components/*"
       ]
     }
   },

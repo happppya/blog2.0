@@ -7,27 +7,28 @@ import { useEffect, useState } from "react";
 const Scene = dynamic(() => import("./Scene"), { ssr: false });
 
 /**
- * Hero-bound 3D canvas utilizing a gradient alpha-mask for seamless void integration.
- * @returns {JSX.Element | null}
+ * @description Hero-bound 3D layer. Applies an alpha-mask for void integration 
+ * and fades out on scroll. Binds global pointer events to bypass DOM layers.
+ * * @returns {JSX.Element | null}
  */
 export default function CanvasBackground() {
-  const [isMounted, setIsMounted] = useState(false);
+  const [eventSource, setEventSource] = useState<HTMLElement | null>(null);
   const { scrollY } = useScroll();
-
+  
   const opacity = useTransform(scrollY, [0, 800], [1, 0]);
 
   useEffect(() => {
-    setIsMounted(true);
+    setEventSource(document.body);
   }, []);
 
-  if (!isMounted) return null;
+  if (!eventSource) return null;
 
   return (
     <motion.div
       style={{ opacity }}
-      className="absolute top-0 left-0 z-0 w-full h-screen pointer-events-none [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]"
+      className="absolute inset-0 z-0 h-screen w-full pointer-events-none [mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_60%,transparent_100%)]"
     >
-      <Scene />
+      <Scene eventSource={eventSource} />
     </motion.div>
   );
 }
