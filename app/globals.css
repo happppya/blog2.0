@@ -1,13 +1,23 @@
 @import "tailwindcss";
 
 @theme {
+
+  /* Colors */
   --color-background: #050505;
   --color-foreground: #ededed;
   --color-muted: #cbced1;
   --color-primary: #a6c6ff;
   --color-primary-glow: rgba(130, 175, 255, 0.4);
   --color-secondary: #b6cffa;
+  --color-secondary-glow: rgba(182, 207, 250, 0.4);
 
+  /* Article card colors */
+  --color-featured: #c084fc;
+  --color-featured-glow: rgba(192, 132, 252, 0.4);
+  --color-legendary: #e66d35;
+  --color-legendary-glow: rgba(230, 109, 53, 0.4);
+
+  /* Fonts */
   --font-title: var(--font-title), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: var(--font-fira-code), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
@@ -22,6 +32,14 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+}
+
+@layer utilities {
+  .tech-grid-bg {
+    background-image: linear-gradient(var(--card-glow) 1px, transparent 1px),
+      linear-gradient(90deg, var(--card-glow) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
 }
 
 @layer base {
