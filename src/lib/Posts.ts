@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { cache } from 'react';
-import { PostMeta } from '@/types/Content';
+import { PostMeta } from '@/types/content';
 
 const POSTS_DIR = path.join(process.cwd(), 'src/content/posts');
 
@@ -78,4 +78,58 @@ export async function getCategorizedPosts(
   }
 
   return categorizedFeed;
+}
+
+/**
+ * Retrieves and parses a single MDX post by its slug.
+ * Memoized to prevent redundant disk I/O when called by both page and layout/metadata components.
+ *
+ * @param {string} slug - The post identifier.
+ * @returns {Promise<{ content: string, frontmatter: PostMeta } | null>} The parsed MDX payload or null.
+ */
+export const getPostBySlug = cache(async (slug: string) => {
+  try {
+    const filePath = path.join(POSTS_DIR, `${slug}.mdx`);
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    
+    const { data, content } = matter(fileContent);
+
+    return {
+      frontmatter: {
+        slug,
+        title: data.title,
+        excerpt: data.excerpt,
+        importance: data.importance,
+        tags: data.tags || [],
+        date: data.date,
+        excludeFromFeatured: data.excludeFromFeatured ?? false,
+      } as PostMeta,
+      content,
+    };
+  } catch (error: any) {
+    // Gracefully handle 404s without polluting the server console during routing checks
+    if (error.code === 'ENOENT') return null;
+    
+    console.error(`[FS Error] Failed to read post ${slug}:`, error);
+    return null;
+  }
+});
+
+/**
+ * Lightweight filesystem scan to extract all MDX slugs.
+ * Bypasses file content parsing for maximum performance during generateStaticParams().
+ *
+ * @returns {Promise<string[]>} Array of slug strings.
+ */
+export async function getAllPostSlugs(): Promise<string[]> {
+  try {
+    const files = await fs.readdir(POSTS_DIR);
+    
+    return files
+      .filter((file) => file.endsWith('.mdx'))
+      .map((file) => file.replace(/\.mdx$/, ''));
+  } catch (error) {
+    console.error(`[FS Error] Failed to read slugs:`, error);
+    return [];
+  }
 }

@@ -4,7 +4,7 @@ import { useState, useMemo, JSX } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PostCard from "@/components/articles/PostCard";
 
-import type { PostMeta } from "@/types/Content";
+import type { PostMeta } from "@/types/content";
 
 interface ArticleFeaturesProps {
   categories: Record<string, PostMeta[]>;

@@ -15,7 +15,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
-import type { Skill, Project } from "@/types/Content";
+import type { Skill, Project } from "@/types/content";
 
 interface EcosystemWorkspaceProps {
   skills: Skill[];

@@ -3,7 +3,7 @@
 import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
 import Link from "next/link";
 import { MouseEvent, useMemo, CSSProperties } from "react";
-import type { PostMeta } from "@/types/Content";
+import type { PostMeta } from "@/types/content";
 
 interface PostCardProps {
   post: PostMeta;

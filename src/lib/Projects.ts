@@ -1,5 +1,5 @@
 
-import { Project, Skill } from '@/types/Content';
+import { Project, Skill } from '@/types/content';
 
 /**
  * Retrieves static skill data for the portfolio.

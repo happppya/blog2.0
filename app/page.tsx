@@ -4,8 +4,8 @@ import CanvasBackground from "@/components/canvas/CanvasBackground";
 import ArticleClusters from "@/components/home/ArticleFeatures";
 import EcosystemWorkspace from "@/components/home/EcosystemWorkspace";
 
-import { getCategorizedPosts } from "@/lib/Posts";
-import { getSkills, getProjects } from "@/lib/Projects";
+import { getCategorizedPosts } from "@/lib/posts";
+import { getSkills, getProjects } from "@/lib/projects";
 
 /**
  * Main application entry point.

@@ -1,6 +1,6 @@
 import { JSX } from "react";
 import ArticleDirectory from "@/components/articles/ArticleDirectory";
-import { getCategorizedPosts, getAllPosts } from "@/lib/Posts"; // Replace with your actual data fetching utility
+import { getCategorizedPosts, getAllPosts } from "@/lib/posts"; // Replace with your actual data fetching utility
 
 /**
  * Main Articles route page. 
