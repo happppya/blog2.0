@@ -3,7 +3,7 @@
 
 import { useState, useMemo, JSX, CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import PostCard from "@/components/articles/PostCard";
+import PostCard from "@/components/blog/PostCard";
 import { TIER_CONFIG, TierLevel } from "@/config/design-config";
 import type { PostMeta } from "@/types/content";
 

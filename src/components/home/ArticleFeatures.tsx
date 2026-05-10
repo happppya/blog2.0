@@ -2,7 +2,7 @@
 
 import { useState, useMemo, JSX } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import PostCard from "@/components/articles/PostCard";
+import PostCard from "@/components/blog/PostCard";
 
 import type { PostMeta } from "@/types/content";
 

@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import ArticleDirectory from "@/components/articles/ArticleDirectory";
+import ArticleDirectory from "@/components/blog/ArticleDirectory";
 import { getCategorizedPosts, getAllPosts } from "@/lib/posts"; // Replace with your actual data fetching utility
 
 /**
