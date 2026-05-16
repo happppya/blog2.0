@@ -1,0 +1,81 @@
+---
+title: "GAZX: Evolutionary Quantum Circuit Optimization With the ZX-Calculus"
+excerpt: "Quantum computers are drowning in static. Here is how I used artificial evolution and graph theory to clean up the noise."
+importance: "Featured"
+tags: ["Quantum", "Rust", "Optimization", "AI"]
+date: "2026-05-15"
+excludeFromFeatured: false
+---
+
+## The Static Problem
+
+Let's talk about the messy reality of quantum computing. Right now, we are living in what researchers call the Noisy Intermediate-Scale Quantum (NISQ) era. Current quantum computers are powerful, but they are like old AM radios. There is a ton of static, and we have absolutely no guarantee of fault tolerance. 
+
+Just like standard computers use logic gates to process data, quantum computers use quantum gates. The catch is that every single time you push a piece of data through a quantum gate, you introduce a little bit of physical noise into the system. Stack too many gates, and that noise compounds until your output is essentially unpredictable. 
+
+If we want these machines to actually do something useful, we have to keep the instructions as short as possible. I wanted to optimize quantum circuits to mitigate these hardware constraints by reducing the gate count and depth. But optimizing these circuits the traditional way is incredibly difficult because the standard code structure is just too rigid.
+
+## Drawing Pictures Instead of Writing Code
+
+I got interested in this problem when I realized we could stop looking at code and start looking at pictures. 
+
+Instead of dealing with traditional quantum circuits, I started using something called the ZX-calculus. The ZX-calculus is a generalized visual language. It represents quantum operations as a web of connected dots and lines, which we call spiders and wires. Spiders come in two types: Z-spiders and X-spiders. 
+
+Because this visual web is so flexible, I can twist, shrink, and simplify it in ways that standard code doesn't allow. Circuits can easily be converted to these diagrams. The real challenge is converting the optimized diagram back into a working circuit, a process called extraction.
+
+But how do you find the best picture? You breed it. Using genetic algorithms, which mimic biological evolution in nature, I repeatedly subjected a population of simulated diagrams to mutations, crossover, and selection. 
+
+## The Need for Speed and Rust
+
+There was just one glaring problem with the earlier experiments in this field. Implementations by Barnes in 2020 and Ewen et al. in 2025 were written in the Python programming language. They relied on the PyZX library, and both researchers noted that their tools just weren't fast enough to simulate thousands of evolving quantum circuits. 
+
+Python is great for writing things quickly, but it can be painfully slow to execute. I knew I needed raw speed. So, I built my primary implementation in Rust. Rust is a compiled language, so it significantly outperforms Python. I also swapped out the old Python-based math library for a blazingly fast Rust alternative called QuiZX. 
+
+The difference was night and day. Some of my mutation processes, like the swap edge mutation, ran almost two thousand times faster. On average, assuming a uniform distribution of mutation selection, the whole system sped up by a factor of nearly 9.679. 
+
+That speed meant I could finally run massive automated tests to find the absolute best settings for the evolutionary algorithm. Because running trials is still computationally expensive, I used a Python script with the Optuna library to employ Bayesian optimization. This let me discover optimal hyperparameters for elitism, crossover rates, and tournament sizes without relying on manual trial and error.
+
+## Preserving the Flow
+
+Mutating quantum diagrams isn't as simple as randomly flipping bits. Every mutation represents one change made to an individual’s graph. 
+
+When I built the mutation algorithms, the biggest hurdle was a property called generalized flow, or gFlow. GFlow is a property of open graphs that ensures a well-defined quantum operation is represented. If a diagram loses its gFlow, it becomes incredibly difficult to extract back into a usable quantum circuit. 
+
+I had to be extremely careful with "unsafe mutations" that do not preserve semantics and can easily break gFlow. On the flip side, I utilized semantic neutral drift mutations. These tweaks alter the visual layout of the graph but completely preserve its underlying mathematical function. If a mutation caused a graph to become unextractable, I programmed the algorithm to simply retry up to 10 times.
+
+## Swapping Puzzle Pieces
+
+In biological evolution, creatures swap DNA. In my algorithm, quantum diagrams swap subgraphs. 
+
+To keep the pool of solutions diverse, I needed to mix different diagrams together using a process called crossover. Previous methods proposed converting the diagrams back into a list of traditional gates, splicing the lists, and drawing the picture again. It was clunky and involved way too many unnecessary intermediary steps. Worse, it totally defeated the purpose of working with flexible graphs in the first place. 
+
+I created a more natural method called Patch Replacement crossover. Instead of converting the diagram into code, my algorithm looks at two parent diagrams. It isolates a connected chunk of internal vertices from one parent, which I call a patch. Then, it searches the other parent for a matching hole, which I call a cavity. The cavity must match the exact boundary size of the patch. 
+
+It’s exactly like swapping out pieces of a puzzle. It respects the visual structure and keeps the quantum math intact.
+
+## Scoring the Survivors
+
+To decide which circuits survive into the next generation, I built a fitness function. This function takes an individual circuit and scores it based on a weighted linear combination of different components. 
+
+The most important factor is accuracy. I built an Approximation Error Component and gave it a massive weight of 15,000. Because finding the exact tensor representation of these circuits consumes too much memory, I evaluated accuracy by simulating the circuit against randomized bitstring test cases. 
+
+I also applied a depth component with a weight of 1,000 to minimize the number of time steps required to execute the circuit. Finally, if a graph completely failed the extraction process, I slapped it with a penalty of 15,000. I didn't want to immediately discard unextractable graphs because they occasionally contribute to a diverse solution search, but I definitely needed to discourage them.
+
+## The Results and the Trade-offs
+
+So, did the Rust rewrite and the new crossover methods work? I aimed my evolutionary algorithm at a standard benchmark circuit called mod5_4. 
+
+The original mod5_4 circuit was clunky, requiring 63 total gates to run. After running it through my evolutionary process, the transpiled circuit needed only 18 total gates. I successfully produced the lowest number of total gates, one-qubit gates, and CNOT gates compared to the currently best approaches in gate optimization. 
+
+But engineering is always about trade-offs. My optimized circuit isn't a flawless clone of the original. When I measured the accuracy using the Bhattacharyya coefficient, it scored about 0.707107 out of 1. This means it performs much better than a random control, but it does not model the goal circuit's probability distribution perfectly. 
+
+For the modern era of noisy quantum hardware, that's exactly the kind of compromise we often need. This method advances quantum circuit optimization enough to let us run algorithms faster and at a much lower cost. As hardware constraints slowly lift, techniques like this will help bridge the gap, bringing theoretical quantum applications into practical use.
+
+***
+
+### Informal Bibliography
+
+* **Barnes, K. (2020):** Pioneered the idea of using genetic algorithms on ZX-calculus diagrams, proving the concept but running into performance bottlenecks with Python.
+* **Ewen, T., et al. (2025):** Expanded on Barnes's work, applying these methods to quantum machine learning and highlighting the need for better crossover methods.
+* **Kissinger, A. (2025):** Developed the QuiZX library in Rust, which provided the foundational speed upgrade for my project.
+* **Staudacher, K., et al. (2023):** Showcased how powerful the ZX-calculus visual language could be for stripping down unnecessary gates in quantum circuits.

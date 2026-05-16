@@ -2,7 +2,7 @@ import HeroOverlay from "@/components/home/HeroOverlay";
 import CanvasBackground from "@/components/canvas/CanvasBackground";
 
 import ArticleClusters from "@/components/home/ArticleFeatures";
-import EcosystemWorkspace from "@/components/home/EcosystemWorkspace";
+import EcosystemWorkspace from "@/components/home/SkillsAndProjects";
 
 import { getCategorizedPosts } from "@/lib/posts";
 import { getSkills, getProjects } from "@/lib/projects";

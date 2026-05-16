@@ -1,0 +1,48 @@
+---
+title: "My Digital Garden"
+excerpt: "Building a personal space on the web is a quiet act of defiance against algorithmic feeds. Here is why I built it, and what assembling the stack actually taught me."
+importance: "Legendary"
+tags: []
+date: "2026-05-15"
+excludeFromFeatured: false
+---
+
+The modern internet feels increasingly like rented space. We write thousands of words on platforms we do not control, subject to algorithms designed to maximize engagement rather than distribute knowledge. If a company pivots, gets acquired, or simply shuts down, our thoughts disappear with it. 
+
+That is why I built this site. I wanted a corner of the internet that actually belongs to me. A place where ideas can be messy, unpolished, and grow over time—a digital garden. 
+
+## The Philosophy of the Garden
+
+Writing online has shifted from documenting knowledge to chasing metrics. A personal blog breaks that cycle. I don't care about click-through rates or optimal posting times here. I care about clarity. 
+
+Writing about a technical problem is a forcing function. You cannot hide behind vague assumptions when you have to explain a concept in plain text. Often, I think I understand a system architecture or a new language feature until I sit down to write about it. The gaps in my knowledge immediately reveal themselves. By documenting my failures, frustrations, and solutions in public, the act of writing becomes an extension of the learning process itself. 
+
+It is also an archive. I am building a searchable database for my future self. When I encounter a bizarre edge case six months from now, the solution will live here, entirely independent of a walled garden's search bar.
+
+## Learning Through Assembly
+
+I could have used a managed platform or cloned a pre-built template. Doing so would have saved me a weekend of configuration. But building this space from the ground up served a secondary, deeply practical purpose: it was a playground for the modern frontend stack. 
+
+Writing code to publish text forces you to make deliberate architectural decisions. I chose Next.js, TypeScript, and Tailwind CSS. This combination wasn't chosen because it is trendy, but because it exposes the underlying realities of building for the modern web.
+
+### Next.js and the Routing Mental Model
+
+Using Next.js for a static blog might sound heavy-handed, but it solves a very specific set of problems out of the box. It handles the file-system routing and static site generation seamlessly. I didn't want to spend my time wiring up basic page transitions or configuring a bundler to parse markdown files. Next lets me focus on the data fetching and the architecture. It forces a clean separation between server-side logic (reading the `.mdx` files) and client-side rendering.
+
+### The Predictability of TypeScript
+
+Adding TypeScript to a personal blog is often mocked as over-engineering. It isn't. Enforcing strict types on Markdown frontmatter seems unnecessary right up until you try to render a page with a missing date field and the entire build quietly fails. 
+
+When you parse raw markdown files into a UI, you are dealing with unstructured data. TypeScript forces you to define exactly what a "Post" object looks like. It makes the data flow entirely predictable. When I pass a post object into a component, I know exactly what properties are available without having to console.log the payload.
+
+### Designing in the Markup with Tailwind
+
+Styling prose is deceptively hard. Typography requires precision. I chose Tailwind CSS because it allows me to build a design system directly in the markup. 
+
+In the past, I would maintain separate stylesheets, constantly jumping between files and trying to invent semantic class names for UI elements that only existed to wrap other elements. Tailwind removes that friction. It keeps the styling context local to the component. When I need to adjust the line height of a paragraph or the spacing of a code block, the change happens right where the structure is defined. 
+
+## The Work Continues
+
+Putting these three technologies together taught me more about modern component architecture than reading a dozen tutorials. Building your own tools forces you to live with the consequences of your technical decisions. 
+
+This space will change. The CSS will be tweaked, the routing logic will be refactored, and the design will iterate. That is the point of a garden. It is a living system. It is never really finished, and that is exactly how I want it.

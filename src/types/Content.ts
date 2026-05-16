@@ -6,7 +6,7 @@ export type ArticleImportance =
 
 export interface Skill {
     name: string;
-    category: 'Frontend' | 'Backend' | 'Graphics';
+    category: 'Frontend' | 'Backend' | 'Graphics' | 'Game Development' | 'Scientific Computing' | 'Systems';
 }
 
 export interface Project {

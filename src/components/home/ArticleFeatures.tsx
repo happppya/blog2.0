@@ -42,7 +42,7 @@ export default function ArticleFeatures({ categories }: ArticleFeaturesProps): J
     <div className="w-full flex flex-col gap-8">
       <div className="flex items-center justify-between border-b border-primary/20 pb-4">
         <h2 className="text-3xl font-serif text-foreground">
-          Article Features
+          Blog Highlight
         </h2>
 
         <nav className="flex gap-2 relative" role="tablist" aria-label="Article Categories">
