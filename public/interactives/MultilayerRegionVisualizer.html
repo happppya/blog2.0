@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macro/Micro Voronoi Generation Viz</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; color: #fff; font-family: monospace; font-size: 13px; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        #ui {
+            position: absolute;
+            top: 15px; left: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px; border-radius: 8px;
+            pointer-events: none;
+            border: 1px solid #333;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            line-height: 1.5;
+        }
+        #controls {
+            position: absolute;
+            top: 15px; right: 15px;
+            width: 280px;
+            max-height: calc(100vh - 60px);
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px; border-radius: 8px;
+            border: 1px solid #444;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            backdrop-filter: blur(4px);
+        }
+        #controls h3, #controls h4 { margin: 5px 0; color: #fff; border-bottom: 1px solid #555; padding-bottom: 5px; }
+        .control-group { display: flex; flex-direction: column; margin-bottom: 5px; }
+        .control-group label { display: flex; justify-content: space-between; margin-bottom: 3px; font-weight: bold; color: #ccc;}
+        .control-group input[type="range"] { width: 100%; cursor: pointer; }
+        
+        .highlight { color: #facc15; }
+        .micro { color: #38bdf8; }
+        
+        /* Custom scrollbar for controls */
+        #controls::-webkit-scrollbar { width: 6px; }
+        #controls::-webkit-scrollbar-track { background: #111; border-radius: 4px; }
+        #controls::-webkit-scrollbar-thumb { background: #666; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <h3 style="margin: 0 0 10px 0;">Multilayer Generation Visualizer</h3>
+        <div><span class="highlight">█</span> SuperRegion Boundaries</div>
+        <div><span class="micro">█</span> MicroRegion Centers</div>
+        <br>
+        <div><strong>Zoom:</strong> Shift + Scroll Wheel</div>
+        <div><strong>Pan:</strong> Click & Drag</div>
+    </div>
+    
+    <div id="controls">
+        <h3>Global Parameters</h3>
+        <div class="control-group">
+            <label>Warp Amplitude <span id="v-warpAmp">30</span></label>
+            <input type="range" id="warpAmp" min="0" max="150" step="1" value="30">
+        </div>
+        <div class="control-group">
+            <label>Warp Frequency <span id="v-warpFreq">0.005</span></label>
+            <input type="range" id="warpFreq" min="0.000" max="0.03" step="0.001" value="0.005">
+        </div>
+        <div class="control-group">
+            <label>Macro Search Radius <span id="v-macroRadius">2</span></label>
+            <input type="range" id="macroRadius" min="1" max="4" step="1" value="2">
+        </div>
+        <div class="control-group">
+            <label>Micro Cell Size <span id="v-microCell">24</span></label>
+            <input type="range" id="microCell" min="8" max="64" step="1" value="24">
+        </div>
+        <div class="control-group">
+            <label>SuperRegion Size <span id="v-superCell">32</span></label>
+            <input type="range" id="superCell" min="16" max="128" step="1" value="32">
+        </div>
+        <div class="control-group">
+            <label>Boundary Transparency <span id="v-boundAlpha">0.8</span></label>
+            <input type="range" id="boundAlpha" min="0.0" max="1.0" step="0.05" value="0.8">
+        </div>
+
+        <h4>SuperRegion Settings</h4>
+        
+        <!-- Forest -->
+        <div class="control-group" style="border-left: 4px solid #268040; padding-left: 8px;">
+            <label style="color:#268040">Forest Gravity <span id="v-g0">1.0</span></label>
+            <input type="range" id="g0" min="0.1" max="5.0" step="0.1" value="1.0">
+            <label style="color:#268040; font-weight: normal;">Probability <span id="v-p0">1.0</span></label>
+            <input type="range" id="p0" min="0.0" max="5.0" step="0.1" value="1.0">
+        </div>
+        
+        <!-- Desert -->
+        <div class="control-group" style="border-left: 4px solid #d9bf59; padding-left: 8px;">
+            <label style="color:#d9bf59">Desert Gravity <span id="v-g1">1.0</span></label>
+            <input type="range" id="g1" min="0.1" max="5.0" step="0.1" value="1.0">
+            <label style="color:#d9bf59; font-weight: normal;">Probability <span id="v-p1">1.0</span></label>
+            <input type="range" id="p1" min="0.0" max="5.0" step="0.1" value="1.0">
+        </div>
+
+        <!-- Deep Ocean -->
+        <div class="control-group" style="border-left: 4px solid #2659cc; padding-left: 8px;">
+            <label style="color:#2659cc">Ocean Gravity <span id="v-g2">1.0</span></label>
+            <input type="range" id="g2" min="0.1" max="5.0" step="0.1" value="1.0">
+            <label style="color:#2659cc; font-weight: normal;">Probability <span id="v-p2">1.0</span></label>
+            <input type="range" id="p2" min="0.0" max="5.0" step="0.1" value="1.0">
+        </div>
+
+        <!-- Mountains -->
+        <div class="control-group" style="border-left: 4px solid #8c8c99; padding-left: 8px;">
+            <label style="color:#8c8c99">Mountain Gravity <span id="v-g3">1.0</span></label>
+            <input type="range" id="g3" min="0.1" max="25.0" step="0.1" value="1.0">
+            <label style="color:#8c8c99; font-weight: normal;">Probability <span id="v-p3">1.0</span></label>
+            <input type="range" id="p3" min="0.0" max="5.0" step="0.1" value="1.0">
+        </div>
+
+        <!-- Swamplands -->
+        <div class="control-group" style="border-left: 4px solid #73338c; padding-left: 8px;">
+            <label style="color:#73338c">Swamp Gravity <span id="v-g4">1.0</span></label>
+            <input type="range" id="g4" min="0.1" max="5.0" step="0.1" value="1.0">
+            <label style="color:#73338c; font-weight: normal;">Probability <span id="v-p4">1.0</span></label>
+            <input type="range" id="p4" min="0.0" max="5.0" step="0.1" value="1.0">
+        </div>
+    </div>
+    
+    <canvas id="glcanvas"></canvas>
+
+<script type="x-shader/x-vertex" id="vertex-shader">
+    attribute vec2 a_position;
+    void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+    }
+</script>
+
+<script type="x-shader/x-fragment" id="fragment-shader">
+    precision highp float;
+
+    uniform vec2 u_resolution;
+    uniform vec2 u_cam;
+    uniform float u_zoom;
+
+    // Configurable Uniforms
+    uniform float u_warpAmplitude;
+    uniform float u_warpFrequency;
+    uniform float u_macroSearchRadius;
+    uniform float u_microCellSize;
+    uniform float u_superRegionCellSize;
+    uniform float u_boundaryAlpha;
+    
+    // Arrays for Biome Data [Forest, Desert, Ocean, Mountain, Swamp]
+    uniform float u_srGrav[5];
+    uniform float u_srProb[5];
+
+    #define MAX_MACRO_SEARCH 4
+
+    // Accurate hash simulation matching `fasthash2`
+    vec2 hash2(vec2 p) {
+        vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
+        p3 += dot(p3, p3.yzx + 33.33);
+        return fract((p3.xx+p3.yz)*p3.zy);
+    }
+
+    // 2D Perlin Noise for Domain Warping
+    vec2 fade(vec2 t) { return t*t*t*(t*(t*6.0-15.0)+10.0); }
+    float pnoise(vec2 p) {
+        vec2 i = floor(p); vec2 f = fract(p);
+        vec2 u = fade(f);
+        float a = dot(hash2(i + vec2(0.0, 0.0))*2.0-1.0, f - vec2(0.0, 0.0));
+        float b = dot(hash2(i + vec2(1.0, 0.0))*2.0-1.0, f - vec2(1.0, 0.0));
+        float c = dot(hash2(i + vec2(0.0, 1.0))*2.0-1.0, f - vec2(0.0, 1.0));
+        float d = dot(hash2(i + vec2(1.0, 1.0))*2.0-1.0, f - vec2(1.0, 1.0));
+        return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+    }
+
+    // Maps SuperRegion data dynamically using Uniform probabilities/weights
+    void getSuperRegionData(vec2 macroCell, out vec3 color, out float gravityWeight) {
+        vec2 h = hash2(macroCell * 1.618);
+        
+        vec3 palettes[5];
+        palettes[0] = vec3(0.15, 0.50, 0.25); // Forest
+        palettes[1] = vec3(0.85, 0.75, 0.35); // Desert
+        palettes[2] = vec3(0.15, 0.35, 0.80); // Deep Ocean
+        palettes[3] = vec3(0.55, 0.55, 0.60); // Mountains
+        palettes[4] = vec3(0.45, 0.20, 0.55); // Swamplands
+        
+        // Calculate Total Probability CDF
+        float totalProb = u_srProb[0] + u_srProb[1] + u_srProb[2] + u_srProb[3] + u_srProb[4];
+        float r = h.y * totalProb;
+        
+        int idx = 0;
+        if (r < u_srProb[0]) idx = 0;
+        else if (r < u_srProb[0] + u_srProb[1]) idx = 1;
+        else if (r < u_srProb[0] + u_srProb[1] + u_srProb[2]) idx = 2;
+        else if (r < u_srProb[0] + u_srProb[1] + u_srProb[2] + u_srProb[3]) idx = 3;
+        else idx = 4;
+        
+        // Assign Data Explicitly to avoid Dynamic Array Indexing issues in WebGL 1.0
+        if (idx == 0) { color = palettes[0]; gravityWeight = u_srGrav[0]; }
+        else if (idx == 1) { color = palettes[1]; gravityWeight = u_srGrav[1]; }
+        else if (idx == 2) { color = palettes[2]; gravityWeight = u_srGrav[2]; }
+        else if (idx == 3) { color = palettes[3]; gravityWeight = u_srGrav[3]; }
+        else { color = palettes[4]; gravityWeight = u_srGrav[4]; }
+        
+        // Add subtle variation to color
+        color += (h.x - 0.5) * 0.1;
+    }
+
+    // Light Voronoi Pass (Regions)
+    vec3 getMicroVoronoiData(vec2 tileCoord) {
+        vec2 cell = floor(tileCoord / u_microCellSize);
+        vec2 fractional = (tileCoord - cell * u_microCellSize) / u_microCellSize;
+        
+        vec2 bestGrid = vec2(0.0);
+        float bestDistSq = 1e20;
+        float secondBestDistSq = 1e20;
+        
+        for(int y = -1; y <= 1; y++) {
+            for(int x = -1; x <= 1; x++) {
+                vec2 offset = vec2(float(x), float(y));
+                vec2 point = hash2(cell + offset);
+                vec2 rel = (offset + point) - fractional;
+                float distSq = dot(rel, rel);
+                
+                if(distSq < bestDistSq) {
+                    secondBestDistSq = bestDistSq;
+                    bestDistSq = distSq;
+                    bestGrid = offset;
+                } else if(distSq < secondBestDistSq) {
+                    secondBestDistSq = distSq;
+                }
+            }
+        }
+        
+        float edgeDistance = (sqrt(secondBestDistSq) - sqrt(bestDistSq)) * u_microCellSize;
+        return vec3(cell + bestGrid, edgeDistance);
+    }
+
+    // Heavy Voronoi Pass (SuperRegions)
+    vec3 getMacroVoronoiData(vec2 warpedTile) {
+        vec2 cell = floor(warpedTile / u_superRegionCellSize);
+        vec2 fractional = (warpedTile - cell * u_superRegionCellSize) / u_superRegionCellSize;
+        
+        vec2 bestGrid = vec2(0.0);
+        float bestDistSq = 1e20;
+        float secondBestDistSq = 1e20;
+        
+        for(int y = -MAX_MACRO_SEARCH; y <= MAX_MACRO_SEARCH; y++) {
+            for(int x = -MAX_MACRO_SEARCH; x <= MAX_MACRO_SEARCH; x++) {
+                // Break out of simulated radius dynamically
+                if (abs(float(x)) > u_macroSearchRadius || abs(float(y)) > u_macroSearchRadius) continue;
+
+                vec2 offset = vec2(float(x), float(y));
+                vec2 nCell = cell + offset;
+                vec2 point = hash2(nCell);
+                
+                vec3 srColor; float gravityWeight;
+                getSuperRegionData(nCell, srColor, gravityWeight);
+                
+                vec2 rel = (offset + point) - fractional;
+                
+                // --- Type-Driven Gravity ---
+                // Failsafe gravityWeight > 0.01 to prevent divide-by-zero artifacts
+                float safeGrav = max(gravityWeight, 0.01);
+                float distSq = dot(rel, rel) / safeGrav; 
+                
+                if(distSq < bestDistSq) {
+                    secondBestDistSq = bestDistSq;
+                    bestDistSq = distSq;
+                    bestGrid = offset;
+                } else if(distSq < secondBestDistSq) {
+                    secondBestDistSq = distSq;
+                }
+            }
+        }
+        
+        float edgeDist = (sqrt(secondBestDistSq) - sqrt(bestDistSq)) * u_superRegionCellSize;
+        return vec3(cell + bestGrid, edgeDist);
+    }
+
+    void main() {
+        vec2 fragCoord = gl_FragCoord.xy;
+        vec2 tileCoord = (fragCoord - 0.5 * u_resolution.xy) / u_resolution.y * u_zoom + u_cam;
+        float lineScale = u_zoom / u_resolution.y;
+
+        // 1. Get exact Micro Region data
+        vec3 microData = getMicroVoronoiData(tileCoord);
+        vec2 microCell = microData.xy;
+        float microEdgeDist = microData.z;
+
+        // 2. Resolve true world coordinate of the micro region's cache anchor
+        vec2 microCellPoint = hash2(microCell);
+        vec2 microCenterWorld = (microCell + microCellPoint) * u_microCellSize;
+
+        // 3. Apply Domain Warping ONLY to the anchor
+        vec2 warpedAnchor = microCenterWorld;
+        if (u_warpAmplitude > 0.0) {
+            float wx = pnoise(microCenterWorld * u_warpFrequency);
+            float wy = pnoise(microCenterWorld * u_warpFrequency + vec2(531.13, 113.87));
+            warpedAnchor += vec2(wx, wy) * u_warpAmplitude;
+        }
+
+        // 4. Resolve SuperRegion at the warped anchor
+        vec3 macroAnchorData = getMacroVoronoiData(warpedAnchor);
+        vec2 macroCell = macroAnchorData.xy;
+
+        vec3 regionColor;
+        float gravityWeight;
+        getSuperRegionData(macroCell, regionColor, gravityWeight);
+
+        // -- VISUALIZATION BLENDING -- //
+
+        // Base color altered by gravityWeight to visualize data (darker = denser/higher gravity)
+        vec3 finalColor = regionColor * mix(0.7, 1.3, (gravityWeight - 0.5) / 2.0);
+
+        // Draw Micro Region Borders (Blueish Dark)
+        float microThickness = 1.0 * lineScale;
+        float microLineIntensity = 1.0 - smoothstep(0.0, microThickness, microEdgeDist);
+        finalColor = mix(finalColor, finalColor * 0.1, microLineIntensity);
+
+        // Highlight Micro Region Centers
+        if(length(tileCoord - microCenterWorld) < microThickness * 2.0) {
+            finalColor = vec3(0.0, 0.8, 1.0);
+        }
+
+        // Calculate continuous/theoretical Macro Region bounds (Yellow Bright)
+        vec2 pixelWarped = tileCoord;
+        if (u_warpAmplitude > 0.0) {
+            pixelWarped += vec2(
+                pnoise(tileCoord * u_warpFrequency), 
+                pnoise(tileCoord * u_warpFrequency + vec2(531.13, 113.87))
+            ) * u_warpAmplitude;
+        }
+        
+        vec3 theoreticalMacroData = getMacroVoronoiData(pixelWarped);
+        float theoreticalEdge = theoreticalMacroData.z;
+        
+        float macroThickness = 2.5 * lineScale;
+        float macroLineIntensity = (1.0 - smoothstep(0.0, macroThickness, theoreticalEdge)) * u_boundaryAlpha;
+        finalColor = mix(finalColor, vec3(1.0, 0.9, 0.2), macroLineIntensity);
+
+        gl_FragColor = vec4(finalColor, 1.0);
+    }
+</script>
+
+<script>
+    // --- UI Logic ---
+    const getVal = (id) => parseFloat(document.getElementById(id).value);
+    
+    // Sync slider span text
+    document.querySelectorAll('input[type="range"]').forEach(input => {
+        const span = document.getElementById('v-' + input.id);
+        if(span) {
+            input.addEventListener('input', e => {
+                span.textContent = e.target.value;
+            });
+        }
+    });
+
+    // --- WebGL Setup ---
+    const canvas = document.getElementById("glcanvas");
+    const gl = canvas.getContext("webgl");
+
+    function createShader(gl, type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            console.error(gl.getShaderInfoLog(shader));
+            gl.deleteShader(shader);
+            return null;
+        }
+        return shader;
+    }
+
+    const vertexShaderSrc = document.getElementById("vertex-shader").text;
+    const fragmentShaderSrc = document.getElementById("fragment-shader").text;
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
+
+    if (!vertexShader || !fragmentShader) throw new Error("Shader compilation failed.");
+
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error(gl.getProgramInfoLog(program));
+    }
+
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1.0, -1.0,  1.0, -1.0, -1.0,  1.0,
+        -1.0,  1.0,  1.0, -1.0,  1.0,  1.0
+    ]), gl.STATIC_DRAW);
+
+    const positionLocation = gl.getAttribLocation(program, "a_position");
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    // Uniform Locations
+    const locRes = gl.getUniformLocation(program, "u_resolution");
+    const locCam = gl.getUniformLocation(program, "u_cam");
+    const locZoom = gl.getUniformLocation(program, "u_zoom");
+    
+    const locWarpAmp = gl.getUniformLocation(program, "u_warpAmplitude");
+    const locWarpFreq = gl.getUniformLocation(program, "u_warpFrequency");
+    const locMacroRad = gl.getUniformLocation(program, "u_macroSearchRadius");
+    const locMicroCell = gl.getUniformLocation(program, "u_microCellSize");
+    const locSuperCell = gl.getUniformLocation(program, "u_superRegionCellSize");
+    const locBoundAlpha = gl.getUniformLocation(program, "u_boundaryAlpha");
+    
+    const locSrGrav = gl.getUniformLocation(program, "u_srGrav");
+    const locSrProb = gl.getUniformLocation(program, "u_srProb");
+
+    // Interactivity State
+    let zoom = 350.0;
+    let camX = 0.0;
+    let camY = 0.0;
+    let isDragging = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+
+    canvas.addEventListener('wheel', (e) => {
+        let zoomFactor = 1.1;
+        if (e.deltaY < 0) zoom /= zoomFactor;
+        else zoom *= zoomFactor;
+        zoom = Math.max(50, Math.min(zoom, 5000)); 
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+    });
+
+    window.addEventListener('mouseup', () => isDragging = false);
+    window.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            let dx = e.clientX - lastMouseX;
+            let dy = e.clientY - lastMouseY;
+            camX -= (dx / canvas.height) * zoom;
+            camY += (dy / canvas.height) * zoom; // Invert Y
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        }
+    });
+
+    function render() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+
+        gl.useProgram(program);
+        gl.uniform2f(locRes, canvas.width, canvas.height);
+        gl.uniform2f(locCam, camX, camY);
+        gl.uniform1f(locZoom, zoom);
+
+        // Upload configurable parameters
+        gl.uniform1f(locWarpAmp, getVal('warpAmp'));
+        gl.uniform1f(locWarpFreq, getVal('warpFreq'));
+        gl.uniform1f(locMacroRad, getVal('macroRadius'));
+        gl.uniform1f(locMicroCell, getVal('microCell'));
+        gl.uniform1f(locSuperCell, getVal('superCell'));
+        gl.uniform1f(locBoundAlpha, getVal('boundAlpha'));
+
+        // Upload Biome Arrays
+        const gravArray = new Float32Array([getVal('g0'), getVal('g1'), getVal('g2'), getVal('g3'), getVal('g4')]);
+        const probArray = new Float32Array([getVal('p0'), getVal('p1'), getVal('p2'), getVal('p3'), getVal('p4')]);
+        
+        gl.uniform1fv(locSrGrav, gravArray);
+        gl.uniform1fv(locSrProb, probArray);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        requestAnimationFrame(render);
+    }
+    
+    requestAnimationFrame(render);
+</script>
+</body>
+</html>

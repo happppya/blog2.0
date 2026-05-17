@@ -1,79 +1,259 @@
 ---
 title: "GAZX: Evolutionary Quantum Circuit Optimization With the ZX-Calculus"
 excerpt: "Quantum computers are drowning in static. Here is how I used artificial evolution and graph theory to clean up the noise."
-importance: "Featured"
-tags: ["Quantum", "Rust", "Optimization", "AI"]
+importance: "Legendary"
+tags: ["Quantum", "Rust", "Python", "Optimization", "AI"]
 date: "2026-05-15"
 excludeFromFeatured: false
 ---
 
 ## The Static Problem
 
-Let's talk about the messy reality of quantum computing. Right now, we are living in what researchers call the Noisy Intermediate-Scale Quantum (NISQ) era. Current quantum computers are powerful, but they are like old AM radios. There is a ton of static, and we have absolutely no guarantee of fault tolerance. 
+Let's talk about the messy reality of quantum computing. Right now we are navigating what researchers call the Noisy Intermediate-Scale Quantum era, or NISQ for short. Current quantum computers are powerful but they act like old AM radios. There is a ton of static and we have absolutely no guarantee of fault tolerance. 
 
-Just like standard computers use logic gates to process data, quantum computers use quantum gates. The catch is that every single time you push a piece of data through a quantum gate, you introduce a little bit of physical noise into the system. Stack too many gates, and that noise compounds until your output is essentially unpredictable. 
+Standard computers use logic gates to process data. Quantum computers use quantum gates. The physical catch is that every single time you push a piece of data through a quantum gate, you introduce a small fraction of noise into the system. Stack too many gates together and that noise compounds. Eventually your output becomes unpredictable garbage. 
 
-If we want these machines to actually do something useful, we have to keep the instructions as short as possible. I wanted to optimize quantum circuits to mitigate these hardware constraints by reducing the gate count and depth. But optimizing these circuits the traditional way is incredibly difficult because the standard code structure is just too rigid.
+If we want these machines to actually solve problems, we must keep the instruction sets as short as possible. I wanted to optimize quantum circuits to mitigate these hardware constraints by drastically reducing gate count and depth. Traditional optimization is incredibly difficult because standard code structure is too rigid. I needed a new perspective.
 
 ## Drawing Pictures Instead of Writing Code
 
-I got interested in this problem when I realized we could stop looking at code and start looking at pictures. 
+I made a breakthrough when I stopped looking at code and started looking at pictures. 
 
-Instead of dealing with traditional quantum circuits, I started using something called the ZX-calculus. The ZX-calculus is a generalized visual language. It represents quantum operations as a web of connected dots and lines, which we call spiders and wires. Spiders come in two types: Z-spiders and X-spiders. 
+Instead of dealing with traditional quantum circuits, I started translating them into the ZX-calculus. The ZX-calculus is a generalized visual language. It represents quantum operations as a web of connected dots and lines. We call them spiders and wires. Spiders come in two types: Z-spiders and X-spiders. 
 
-Because this visual web is so flexible, I can twist, shrink, and simplify it in ways that standard code doesn't allow. Circuits can easily be converted to these diagrams. The real challenge is converting the optimized diagram back into a working circuit, a process called extraction.
+![Standard Quantum Circuit vs. ZX-Calculus Diagram](https://quantum-journal.org/wp-content/uploads/2020/06/quantum-cover-1536x768.png)
 
-But how do you find the best picture? You breed it. Using genetic algorithms, which mimic biological evolution in nature, I repeatedly subjected a population of simulated diagrams to mutations, crossover, and selection. 
+Because this visual web is topologically flexible, I can twist, shrink, and simplify it in ways that standard code completely prevents. Circuits can easily be converted to these diagrams. The real challenge is converting the optimized diagram back into a working circuit. We call this extraction.
+
+How do you find the best picture that can still be extracted? You breed it. Using genetic algorithms, which mimic biological evolution, I repeatedly subjected a population of simulated diagrams to mutations, crossover, and selective pressure. 
 
 ## The Need for Speed and Rust
 
-There was just one glaring problem with the earlier experiments in this field. Implementations by Barnes in 2020 and Ewen et al. in 2025 were written in the Python programming language. They relied on the PyZX library, and both researchers noted that their tools just weren't fast enough to simulate thousands of evolving quantum circuits. 
+There was one glaring problem with earlier experiments in this field. Implementations by Barnes in 2020 and Ewen et al. in 2025 were written in Python. They relied on the PyZX library. Both researchers noted that their tools just were not fast enough to simulate thousands of evolving quantum circuits. 
 
-Python is great for writing things quickly, but it can be painfully slow to execute. I knew I needed raw speed. So, I built my primary implementation in Rust. Rust is a compiled language, so it significantly outperforms Python. I also swapped out the old Python-based math library for a blazingly fast Rust alternative called QuiZX. 
+Python is great for prototyping quickly but it is painfully slow to execute at scale. I knew I needed raw speed. I built my primary implementation in Rust. Because Rust is a compiled language, it significantly outperforms Python in memory management and execution time. I also swapped out the old Python-based math library for a blazingly fast Rust alternative called QuiZX. 
 
-The difference was night and day. Some of my mutation processes, like the swap edge mutation, ran almost two thousand times faster. On average, assuming a uniform distribution of mutation selection, the whole system sped up by a factor of nearly 9.679. 
+The difference was immediate. Some of my mutation processes ran almost two thousand times faster. On average the whole system sped up by a factor of nearly ten. 
 
-That speed meant I could finally run massive automated tests to find the absolute best settings for the evolutionary algorithm. Because running trials is still computationally expensive, I used a Python script with the Optuna library to employ Bayesian optimization. This let me discover optimal hyperparameters for elitism, crossover rates, and tournament sizes without relying on manual trial and error.
+That performance unlock meant I could finally run massive automated tests to find the absolute best settings for the evolutionary algorithm. Running these trials is still computationally expensive. I used a Python script with the Optuna library to employ Bayesian optimization. This let me discover optimal hyperparameters for elitism, crossover rates, and tournament sizes without relying on manual trial and error.
 
 ## Preserving the Flow
 
-Mutating quantum diagrams isn't as simple as randomly flipping bits. Every mutation represents one change made to an individual’s graph. 
+Mutating quantum diagrams is dangerous. Every mutation represents a physical change made to an individual graph. 
 
-When I built the mutation algorithms, the biggest hurdle was a property called generalized flow, or gFlow. GFlow is a property of open graphs that ensures a well-defined quantum operation is represented. If a diagram loses its gFlow, it becomes incredibly difficult to extract back into a usable quantum circuit. 
+When I built the mutation algorithms, the biggest hurdle was preserving a property called generalized flow, or gFlow. GFlow is a mathematical property of open graphs that ensures a well-defined quantum operation is still being represented. If a diagram loses its gFlow, it becomes incredibly difficult to extract back into a usable quantum circuit. 
 
-I had to be extremely careful with "unsafe mutations" that do not preserve semantics and can easily break gFlow. On the flip side, I utilized semantic neutral drift mutations. These tweaks alter the visual layout of the graph but completely preserve its underlying mathematical function. If a mutation caused a graph to become unextractable, I programmed the algorithm to simply retry up to 10 times.
+I had to carefully categorize my mutations. On one side, I have "unsafe" structural mutations. Take a look at `add_edge`:
+
+```rust
+pub fn add_edge(
+    graph: &mut Graph,
+    first_vertex_option: Option<usize>,
+    second_vertex_option: Option<usize>
+) {
+    // ... [Candidate selection logic omitted for brevity] ...
+
+    match graph.edge_type_opt(first_vertex, second_vertex) {
+        Some(_) => { return; }
+        None => {
+            let edge_type = match rng().random_range(0..=1) {
+                0 => EType::N,
+                1 => EType::H,
+                _ => unreachable!(),
+            };
+            graph.add_edge_with_type(first_vertex, second_vertex, edge_type);
+        }
+    }
+}
+```
+
+Throwing a random standard or Hadamard wire between two spiders is highly destructive. Mathematically, it fundamentally alters the tensor network the graph represents. More importantly, it often destroys gFlow by breaking the strict causal ordering required to extract the diagram back into time-stepped logic gates. 
+
+Conversely, I leaned heavily on semantic neutral drift (SND) mutations. These tweaks alter the visual layout of the graph but completely preserve its underlying mathematical function. A perfect example is `local_complement`:
+
+```rust
+/// [mutation 1] Performs local complementation
+pub fn local_complement(graph: &mut Graph, vertex_to_remove_option: Option<usize>) {
+    let vertex_to_remove = utilities::default_vertex(graph, vertex_to_remove_option);
+    match vertex_to_remove {
+        Some(vertex) => utilities::complement(graph, vertex),
+        None => return,
+    }
+}
+```
+
+In the ZX-calculus, local complementation is a mathematically proven rewrite rule. Applying it to a valid spider toggles the connectivity of all its immediate neighbors—adding edges where there were none, and removing existing ones. The topology completely transforms, but the overall quantum unitary matrix remains perfectly identical. It allows the algorithm to freely explore new structural pathways without corrupting the circuit's logic.
+
+But I could not just abandon unsafe mutations. They are the primary drivers for discovering radically smaller circuits. To handle the chaos, I built a safety net. If an unsafe mutation caused a graph to become unextractable, the algorithm simply rolls back the memory swap and retries up to a set limit.
+
+```rust
+pub fn mutate_and_extract(population: &mut PopulationComponents) {
+    let len = population.graph.len();
+
+    // Assign mutations and prime the extract status
+    for i in 0..len {
+        let mutation = *mutation_runner::MUTATIONS_ALL.choose(&mut rng()).unwrap();
+        population.last_mutation[i] = mutation;
+        population.extract_status[i] = ExtractStatus::Panic;
+        population.mutation_retries[i] = 0;
+    }
+
+    for _ in 1..=MUTATION_RETRIES {
+        for i in 0..len {
+            if population.extract_status[i] == ExtractStatus::Success {
+                continue;
+            }
+
+            population.mutation_retries[i] += 1;
+
+            let mut candidate = population.graph[i].clone();
+            let last_mutation = population.last_mutation[i];
+            mutation_runner::run_mutation(&mut candidate, &last_mutation);
+
+            // Swap the mutated candidate into the population for extraction testing
+            std::mem::swap(&mut population.graph[i], &mut candidate);
+            let extract_success = update_extract_status(population, i);
+
+            if !extract_success {
+                if population.mutation_retries[i] >= MUTATION_RETRIES {
+                    // Don't swap back if out of retries; mark as failed
+                    population.extract_status[i] = ExtractStatus::Fail;
+                } else {
+                    // Revert the swap to try again
+                    std::mem::swap(&mut population.graph[i], &mut candidate);
+                }
+            }
+        }
+    }
+}
+```
+
+By combining safe topological shuffles with heavily-guarded structural risks, the evolutionary process maintains forward momentum without constantly breaking its own genetic material.
 
 ## Swapping Puzzle Pieces
 
-In biological evolution, creatures swap DNA. In my algorithm, quantum diagrams swap subgraphs. 
+Biological evolution relies on swapping DNA. My algorithm swaps subgraphs. 
 
-To keep the pool of solutions diverse, I needed to mix different diagrams together using a process called crossover. Previous methods proposed converting the diagrams back into a list of traditional gates, splicing the lists, and drawing the picture again. It was clunky and involved way too many unnecessary intermediary steps. Worse, it totally defeated the purpose of working with flexible graphs in the first place. 
+To keep the pool of solutions diverse, I needed to mix different diagrams together using a process called crossover. Previous methods proposed converting the diagrams back into a list of traditional gates, splicing the lists, and drawing the picture again. It was clunky and involved way too many unnecessary intermediary steps. Worse, it destroyed the entire advantage of working with flexible graphs. 
 
-I created a more natural method called Patch Replacement crossover. Instead of converting the diagram into code, my algorithm looks at two parent diagrams. It isolates a connected chunk of internal vertices from one parent, which I call a patch. Then, it searches the other parent for a matching hole, which I call a cavity. The cavity must match the exact boundary size of the patch. 
+I created a more natural method called Patch Replacement crossover. Instead of converting the diagram into code, my algorithm looks at two parent diagrams. It isolates a connected chunk of internal vertices from one parent, which I call a patch. Then it searches the other parent for a matching hole, which I call a cavity. The cavity must match the exact boundary size of the patch. 
 
-It’s exactly like swapping out pieces of a puzzle. It respects the visual structure and keeps the quantum math intact.
+It is exactly like swapping out pieces of a puzzle. It respects the visual structure and keeps the quantum math intact. Here is how I isolate a valid cavity in the recipient graph:
+
+```rust
+/// Searches the graph for a connected cluster of nodes (a cavity) 
+/// whose number of external connections matches `target_boundary`
+fn find_matching_cavity(
+    graph: &Graph,
+    target_boundary: usize,
+    rng: &mut impl Rng
+) -> Option<Cavity> {
+    let mut non_boundary = Vec::new();
+    push_nonboundary_vertices(&mut non_boundary, graph);
+
+    // Select 10 random starting points to look for holes instead of searching entire space
+    let seeds: Vec<_> = non_boundary.choose_multiple(rng, 10).collect();
+
+    for &seed in seeds {
+        let mut interior = Vec::new();
+        let mut q = VecDeque::new();
+        let mut visited = HashSet::new();
+
+        q.push_back(seed);
+        visited.insert(seed);
+        interior.push(seed);
+
+        // Iteratively grow a cavity with BFS
+        for _ in 0..15 {
+            let mut boundary_anchors = Vec::new();
+            for &v in &interior {
+                for n in graph.neighbors(v) {
+                    if !interior.contains(&n) {
+                        boundary_anchors.push(n);
+                    }
+                }
+            }
+
+            if boundary_anchors.len() == target_boundary {
+                // Ensure the cavity does not contain invalid boundary nodes
+                if interior.iter().any(|&v| graph.vertex_type(v) != VType::Z && graph.vertex_type(v) != VType::X) {
+                    break; 
+                }
+                return Some(Cavity { interior, boundary_anchors });
+            }
+
+            // Abandon if the hole grows too large
+            if boundary_anchors.len() > target_boundary + 2 {
+                break;
+            }
+            // ... BFS expansion logic continues ...
+```
+
+Once a cavity is found, the algorithm deletes the interior nodes, instantiates new nodes cloned from the donor patch, and connects the dangling edges to the boundary anchors.
+
+![Patch Replacement Crossover](/images/PatchReplacementCrossover.jpg)
 
 ## Scoring the Survivors
 
-To decide which circuits survive into the next generation, I built a fitness function. This function takes an individual circuit and scores it based on a weighted linear combination of different components. 
+To decide which circuits survive into the next generation, I built a fitness function. This function takes an individual circuit and scores it based on a weighted linear combination of its traits. 
 
-The most important factor is accuracy. I built an Approximation Error Component and gave it a massive weight of 15,000. Because finding the exact tensor representation of these circuits consumes too much memory, I evaluated accuracy by simulating the circuit against randomized bitstring test cases. 
+Accuracy is paramount. Finding the exact tensor representation of these circuits consumes too much memory, so I evaluate accuracy by simulating the circuit against randomized bitstring test cases. I gave the Approximation Error component a massive weight of 15000. 
 
-I also applied a depth component with a weight of 1,000 to minimize the number of time steps required to execute the circuit. Finally, if a graph completely failed the extraction process, I slapped it with a penalty of 15,000. I didn't want to immediately discard unextractable graphs because they occasionally contribute to a diverse solution search, but I definitely needed to discourage them.
+I also applied a depth component to minimize the number of time steps required to execute the circuit, alongside penalties for complex gates.
+
+```rust
+pub fn get_fitness(population: &PopulationComponents, i: usize) -> f64 {
+    let graph = &population.graph[i];
+    let circuit = &population.circuit[i];
+
+    let depth = get_depth(graph, circuit);
+    let input_encodings = get_input_encodings(graph, circuit);
+
+    let graph_fitness = 
+        -1000.0 * depth + 
+        -1000.0 * input_encodings;
+
+    let circuit_fitness = match population.extract_status[i] {
+        ExtractStatus::Success => {
+            let approximation_error = get_approximation_error_testcases(graph, circuit);
+            let complex_gates = get_complex_gates(graph, circuit);
+            let oneq_gates = get_oneq_gates(graph, circuit);
+
+            // Heavy penalty for inaccurate approximations
+            -10000.0 * approximation_error +
+            -600.0 * oneq_gates +
+            -1000.0 * complex_gates
+        },
+        ExtractStatus::Fail | ExtractStatus::Panic => {
+            // Massive penalty for graphs that cannot be extracted back to circuits
+            -15000.0
+        }
+    };
+
+    let mut fitness = circuit_fitness + graph_fitness;
+    if circuit.num_gates() == 0 {
+        fitness -= 10000.0;
+    }
+
+    return fitness;
+}
+```
+
+Notice the massive 15000 point penalty for `ExtractStatus::Fail`. I did not want to immediately delete unextractable graphs because they occasionally hold interesting structural traits that contribute to a diverse solution search, but I absolutely needed to discourage them from dominating the gene pool.
 
 ## The Results and the Trade-offs
 
-So, did the Rust rewrite and the new crossover methods work? I aimed my evolutionary algorithm at a standard benchmark circuit called mod5_4. 
+Engineering is entirely about trade-offs. Did the Rust rewrite and the patch crossover methods actually yield usable quantum circuits? 
 
-The original mod5_4 circuit was clunky, requiring 63 total gates to run. After running it through my evolutionary process, the transpiled circuit needed only 18 total gates. I successfully produced the lowest number of total gates, one-qubit gates, and CNOT gates compared to the currently best approaches in gate optimization. 
+I aimed the algorithm at a standard benchmark circuit called mod5_4. The original mod5_4 circuit is heavy and requires 63 total gates to run. After running it through my evolutionary process, the transpiled circuit needed only 18 total gates. GAZX successfully produced the lowest number of total gates, one-qubit gates, and CNOT gates compared to the best current approaches in gate optimization. 
 
-But engineering is always about trade-offs. My optimized circuit isn't a flawless clone of the original. When I measured the accuracy using the Bhattacharyya coefficient, it scored about 0.707107 out of 1. This means it performs much better than a random control, but it does not model the goal circuit's probability distribution perfectly. 
+But my optimized circuit is not a flawless clone of the original. When I measured the accuracy using the Bhattacharyya coefficient, it scored about 0.707 out of 1. It performs vastly better than a random control but it does not model the goal circuit's probability distribution perfectly. 
 
-For the modern era of noisy quantum hardware, that's exactly the kind of compromise we often need. This method advances quantum circuit optimization enough to let us run algorithms faster and at a much lower cost. As hardware constraints slowly lift, techniques like this will help bridge the gap, bringing theoretical quantum applications into practical use.
+For the modern era of noisy quantum hardware, that is exactly the kind of compromise we need. We trade a margin of mathematical perfection for a massive reduction in physical noise. This method advances quantum circuit optimization enough to let us run algorithms faster and at a much lower cost. As hardware constraints slowly lift over the next decade, bridging techniques like this will be the exact tools that pull theoretical quantum applications into practical use.
 
 ***
 
-### Informal Bibliography
+## Informal Bibliography
 
 * **Barnes, K. (2020):** Pioneered the idea of using genetic algorithms on ZX-calculus diagrams, proving the concept but running into performance bottlenecks with Python.
 * **Ewen, T., et al. (2025):** Expanded on Barnes's work, applying these methods to quantum machine learning and highlighting the need for better crossover methods.
