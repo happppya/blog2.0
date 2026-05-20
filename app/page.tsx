@@ -21,7 +21,7 @@ export default async function Home() {
   ]);
 
   return (
-    <main className="relative min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)] selection:bg-[var(--color-primary-glow)] selection:text-[var(--color-foreground)] overflow-hidden">
+    <main className="relative min-h-screen bg-background text-foreground selection:bg-primary-glow selection:text-foreground overflow-hidden">
       <CanvasBackground />
 
       <div className="relative z-10 w-full flex flex-col gap-32 pb-40">

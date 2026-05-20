@@ -1,25 +1,25 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 import type { Skill, Project } from "@/types/content";
-import { ProjectNodeTrack } from "./ProjectNodeTrack";
+import { ProjectSpine } from "./ProjectSpine";
 
-interface EcosystemWorkspaceProps {
+interface KineticEcosystemProps {
   skills: Skill[];
   projects: Project[];
 }
 
 /**
- * EcosystemWorkspace
- * @param {EcosystemWorkspaceProps} props
- * @returns {JSX.Element}
+ * KineticEcosystem
+ * Refined spatial interface. Blends deep editorial structure with immersive kinetic lighting.
  */
-export default function EcosystemWorkspace({ skills, projects }: EcosystemWorkspaceProps) {
+export default function KineticEcosystem({ skills, projects }: KineticEcosystemProps) {
   const [hoveredTech, setHoveredTech] = useState<string | null>(null);
   const [activeProjectIndex, setActiveProjectIndex] = useState(0);
+  const [cycleFocus, setCycleFocus] = useState<string | null>(null);
 
   const activeProject = projects[activeProjectIndex];
 
@@ -31,197 +31,157 @@ export default function EcosystemWorkspace({ skills, projects }: EcosystemWorksp
     }, {});
   }, [skills]);
 
-  /**
-   * Scans the project matrix for a specific technology and cycles the active index.
-   * @param {string} techName - The technology identifier to query.
-   */
-  const cycleProjectByTech = useCallback((techName: string) => {
-    const validIndices = projects.reduce<number[]>((acc, project, idx) => {
-      if (project.techStack.includes(techName)) acc.push(idx);
-      return acc;
-    }, []);
+  const cycleProjectByTech = useCallback(
+    (techName: string) => {
+      const validIndices = projects.reduce<number[]>((acc, project, idx) => {
+        if (project.techStack.includes(techName)) acc.push(idx);
+        return acc;
+      }, []);
 
-    if (!validIndices.length) return;
+      if (!validIndices.length) return;
 
-    const currentPos = validIndices.indexOf(activeProjectIndex);
-    const nextIdx = currentPos === -1 
-      ? validIndices[0] 
-      : validIndices[(currentPos + 1) % validIndices.length];
+      const currentPos = validIndices.indexOf(activeProjectIndex);
+      const nextIdx =
+        currentPos === -1
+          ? validIndices[0]
+          : validIndices[(currentPos + 1) % validIndices.length];
 
-    setActiveProjectIndex(nextIdx);
-  }, [projects, activeProjectIndex]);
+      setActiveProjectIndex(nextIdx);
+      setCycleFocus(techName);
+    },
+    [projects, activeProjectIndex]
+  );
 
-  return (
-    <section className="w-full flex flex-col gap-6 items-start max-w-7xl mx-auto">
-      <ProjectNodeTrack
-        projects={projects}
-        activeProjectIndex={activeProjectIndex}
-        setActiveProjectIndex={setActiveProjectIndex}
-        hoveredTech={hoveredTech}
-      />
+  const handleManualIndexChange = useCallback((idx: number) => {
+    setActiveProjectIndex(idx);
+    setCycleFocus(null);
+  }, []);
+
+ return (
+    // THE FIX: grid grid-rows-[1fr_auto] ensures strict, impenetrable cell boundaries.
+    // min-h-[100svh] ensures it fills the screen, but can grow beyond it on tiny mobile screens.
+    <section className="relative w-full min-h-[100svh] overflow-x-hidden bg-background text-foreground grid grid-rows-[1fr_auto]">
       
-      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch min-h-[500px]">
-        <ProjectDetailView project={activeProject} />
-        
-        <SkillsSummary
-          groupedSkills={groupedSkills}
-          hoveredTech={hoveredTech}
-          setHoveredTech={setHoveredTech}
-          activeProjectTech={activeProject.techStack}
-          onSkillClick={cycleProjectByTech}
-          projects={projects}
-          activeProjectIndex={activeProjectIndex}
-        />
-      </div>
+      {/* 01. Innovative Project Spine (Absolute left) */}
+      <ProjectSpine 
+        projects={projects}
+        currentIndex={activeProjectIndex} 
+        setIndex={handleManualIndexChange}
+        cycleFocus={cycleFocus}
+      />
+
+      {/* 02. The Monolith (Occupies Row 1: 1fr) */}
+      <ProjectTitle 
+        project={activeProject} 
+      />
+
+      {/* 03. High-Contrast Skill Matrix (Occupies Row 2: auto) */}
+      <HighContrastSkillMatrix
+        groupedSkills={groupedSkills}
+        projects={projects}
+        activeProject={activeProject}
+        hoveredTech={hoveredTech}
+        setHoveredTech={setHoveredTech}
+        onSkillClick={cycleProjectByTech}
+        cycleFocus={cycleFocus}
+      />
     </section>
   );
 }
 
-interface ProjectDetailViewProps {
-  project: Project;
-}
-
 /**
- * ProjectDetailView
- * Stripped of redundant tech tags. Focuses entirely on narrative and execution.
+ * HighContrastSkillMatrix
+ * Utilizes primary color glow for cycle focus and active dependency views. High contrast headers.
  */
-function ProjectDetailView({ project }: ProjectDetailViewProps) {
-  return (
-    <main className="w-full h-full relative rounded-md border border-primary/20 bg-background/50 backdrop-blur-md overflow-hidden flex flex-col">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={project.id}
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          transition={{ duration: 0.2 }}
-          className="flex flex-col h-full p-8 relative z-10"
-        >
-          <div className="w-full h-56 bg-primary/5 border border-primary/20 rounded-sm mb-8 flex items-center justify-center bg-[linear-gradient(var(--color-primary-glow)_1px,transparent_1px),linear-gradient(90deg,var(--color-primary-glow)_1px,transparent_1px)] bg-[size:24px_24px]">
-            <span className="font-mono text-primary/30 text-xs tracking-widest uppercase">
-              No_Visual_Data
-            </span>
-          </div>
-
-          <h3 className="text-3xl font-serif text-foreground mb-4">{project.title}</h3>
-          
-          <p className="text-muted font-mono text-sm leading-relaxed flex-grow">
-            {project.description}
-          </p>
-
-          <div className="mt-8 flex justify-end">
-            <Link
-              href={project.link}
-              className="group relative px-8 py-3 font-mono text-xs uppercase tracking-widest text-background bg-primary hover:bg-secondary transition-colors rounded-sm overflow-hidden"
-            >
-              <span className="relative z-10 font-bold">Execute //</span>
-            </Link>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-    </main>
-  );
-}
-
-interface SkillsSummaryProps {
+function HighContrastSkillMatrix({ 
+  groupedSkills, 
+  projects,
+  activeProject, 
+  hoveredTech, 
+  setHoveredTech, 
+  onSkillClick,
+  cycleFocus
+}: {
   groupedSkills: Record<string, Skill[]>;
+  projects: Project[];
+  activeProject: Project;
   hoveredTech: string | null;
   setHoveredTech: (tech: string | null) => void;
-  activeProjectTech: string[];
   onSkillClick: (tech: string) => void;
-  projects: Project[];
-  activeProjectIndex: number;
-}
-
-/**
- * SkillsSummary
- * Renders the skill tree and computes real-time pagination subsets for active node discovery.
- */
-export function SkillsSummary({
-  groupedSkills,
-  hoveredTech,
-  setHoveredTech,
-  activeProjectTech,
-  onSkillClick,
-  projects,
-  activeProjectIndex,
-}: SkillsSummaryProps) {
-  const activeProject = projects[activeProjectIndex];
-
-  const skillMetrics = useMemo(() => {
-    const metrics: Record<string, { total: number; current: number }> = {};
-    
-    Object.values(groupedSkills).flat().forEach((skill) => {
-      metrics[skill.name] = { total: 0, current: 0 };
-    });
-
-    projects.forEach((proj) => {
-      proj.techStack.forEach((tech) => {
-        if (metrics[tech]) metrics[tech].total += 1;
-      });
-    });
-
-    activeProjectTech.forEach((tech) => {
-      if (!metrics[tech]) return;
-      const matchingProjects = projects.filter((p) => p.techStack.includes(tech));
-      metrics[tech].current = matchingProjects.findIndex((p) => p.id === activeProject.id) + 1;
-    });
-
-    return metrics;
-  }, [projects, activeProject, activeProjectTech, groupedSkills]);
+  cycleFocus: string | null;
+}) {
+  const activeTechStack = new Set(activeProject.techStack);
 
   return (
-    <aside className="w-full h-full flex flex-col gap-6 border border-primary/10 p-8 rounded-md bg-primary/5 overflow-y-auto custom-scrollbar">
-      <header className="border-b border-primary/20 pb-3">
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xl font-serif text-foreground">Skills</h2>
-        </div>
-        <p className="font-mono text-[10px] text-muted/50 uppercase tracking-widest">
-          {"> Click any skill to see related projects"}
-        </p>
-      </header>
-
-      <div className="flex flex-col gap-8 mt-2">
+ <div className="z-20 pointer-events-none px-8 md:pl-48 md:pr-12 pb-12 w-full">
+      <div className="flex flex-wrap justify-start items-start gap-x-16 gap-y-10 max-w-6xl mx-auto w-full pointer-events-auto border-t border-foreground/10 pt-10">
         {Object.entries(groupedSkills).map(([category, categorySkills]) => (
-          <div key={category} className="flex flex-col gap-4">
-            <h3 className="font-mono text-primary/40 uppercase tracking-widest text-xs">
-              // {category}
-            </h3>
-            <ul className="flex flex-wrap gap-2" aria-label={`${category} skills`}>
+          <div key={category} className="flex flex-col gap-4 min-w-[180px]">
+            <h4 className="font-mono text-[10px] font-bold uppercase tracking-[0.35em] text-primary border-b border-primary/20 pb-2 w-full">
+              {category}
+            </h4>
+            
+            <ul className="flex flex-col gap-2 items-start">
               {categorySkills.map((skill) => {
+                const isCycleFocus = cycleFocus === skill.name;
+                const isActiveDependency = activeTechStack.has(skill.name);
                 const isHovered = hoveredTech === skill.name;
-                const isActiveProjectDependency = activeProjectTech.includes(skill.name);
-                const metrics = skillMetrics[skill.name] || { total: 0, current: 0 };
                 
-                const paginationText = `[${metrics.current}/${metrics.total}]`;
-                
-                let buttonClasses = "bg-background border-primary/20 text-muted hover:border-primary/50";
-                
-                if (isHovered) {
-                  buttonClasses = "bg-primary border-primary text-background shadow-[0_0_15px_var(--color-primary-glow)] z-10";
-                } else if (isActiveProjectDependency) {
-                  buttonClasses = "bg-primary/15 border-primary/60 text-primary shadow-[inset_0_0_10px_var(--color-primary-glow)]";
+                const validProjects = projects.filter(p => p.techStack.includes(skill.name));
+                const totalOccurrences = validProjects.length;
+                const currentRank = validProjects.findIndex(p => p.id === activeProject.id) + 1;
+
+                const showCycleIndicator = isCycleFocus || (isHovered && totalOccurrences > 1);
+
+                // ZERO LAYOUT SHIFT: Font colors mutate, but padding is rigid. Background is absolute.
+                let textStyle = "text-muted-foreground/50 group-hover:text-primary";
+                if (isCycleFocus) {
+                  textStyle = "text-background font-bold";
+                } else if (isActiveDependency) {
+                  textStyle = "text-primary font-bold drop-shadow-[0_0_8px_var(--color-primary-glow)]";
                 }
 
                 return (
-                  <li key={skill.name}>
+                  <li key={skill.name} className="relative flex items-center h-7">
                     <button
                       onClick={() => onSkillClick(skill.name)}
                       onMouseEnter={() => setHoveredTech(skill.name)}
                       onMouseLeave={() => setHoveredTech(null)}
-                      onFocus={() => setHoveredTech(skill.name)}
-                      onBlur={() => setHoveredTech(null)}
-                      disabled={metrics.total === 0}
-                      className={`group relative flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs border rounded-sm transition-all duration-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary ${
-                        metrics.total === 0 ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-                      } ${buttonClasses}`}
-                      aria-label={isActiveProjectDependency ? `Cycle projects using ${skill.name}` : `View projects using ${skill.name}`}
+                      disabled={totalOccurrences === 0}
+                      className={`group relative flex items-center gap-2.5 text-left transition-all duration-300 ease-out px-2.5 -ml-2.5 h-full ${
+                        totalOccurrences === 0 ? "opacity-20 cursor-not-allowed" : "cursor-pointer"
+                      }`}
+                      style={{ transform: isHovered && !isCycleFocus ? "translateX(8px)" : "translateX(0)" }}
                     >
-                      <span className="whitespace-nowrap">{skill.name}</span>
-                      
-                      <span className="max-w-0 opacity-0 group-hover:max-w-[40px] group-hover:opacity-100 transition-all duration-300 ease-out whitespace-nowrap overflow-hidden text-[10px] tracking-widest font-bold">
-                        {paginationText}
+                      {/* Hardware Accelerated Active Plate */}
+                      {isCycleFocus && (
+                        <motion.div 
+                          layoutId="active-skill-plate"
+                          className="absolute inset-0 bg-primary rounded-sm shadow-[0_0_15px_var(--color-primary-glow)]"
+                          initial={false}
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        />
+                      )}
+
+                      <span className={`relative z-10 font-mono text-xs md:text-sm transition-colors duration-300 whitespace-nowrap ${textStyle}`}>
+                        {skill.name}
                       </span>
+
+                      {/* Proximate Cycle Indicator */}
+                      <AnimatePresence>
+                        {showCycleIndicator && (
+                          <motion.span
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            className={`relative z-10 font-mono text-[11px] whitespace-nowrap tracking-widest ${
+                              isCycleFocus ? "text-background/80" : "text-primary/70"
+                            }`}
+                          >
+                            [{currentRank}/{totalOccurrences}]
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </button>
                   </li>
                 );
@@ -229,7 +189,68 @@ export function SkillsSummary({
             </ul>
           </div>
         ))}
+
       </div>
-    </aside>
+    </div>
+  );
+}
+
+function ProjectTitle({ project }: { project: Project }) {
+  return (
+    <div className="relative z-10 grid place-items-center pointer-events-none pl-20 md:pl-24 pr-8 py-16 w-full h-full">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={project.id}
+          // Decreased the initial scale/blur delta so there is less distance to travel
+          initial={{ opacity: 0, filter: "blur(10px)", scale: 0.98 }}
+          animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
+          // THE FIX: Isolated exit transition to get the old node out of the DOM in 150ms
+          exit={{ 
+            opacity: 0, 
+            filter: "blur(10px)", 
+            scale: 1.02, 
+            transition: { duration: 0.15, ease: "easeIn" } 
+          }}
+          // Aggressive, snappy bezier curve for the entrance
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col items-center text-center max-w-[950px] w-full"
+        >
+          <motion.h2 
+            className="text-[clamp(2.5rem,5.5vw,7rem)] font-serif leading-[0.82] tracking-tighter uppercase mix-blend-difference text-foreground drop-shadow-[0_0_15px_var(--color-primary-glow)]"
+            layoutId="project-title"
+          >
+            {project.title}
+          </motion.h2>
+
+          <div className="mt-10 overflow-hidden">
+            <motion.p
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              // Compressed delay from 0.15 to 0.05
+              transition={{ delay: 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="text-sm md:text-base font-mono text-muted-foreground max-w-xl mx-auto leading-relaxed"
+            >
+              {project.description}
+            </motion.p>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            // Compressed delay from 0.4 to 0.15. Faster overall duration.
+            transition={{ delay: 0.15, duration: 0.4, ease: "circOut" }}
+            className="mt-14 pointer-events-auto"
+          >
+            <Link
+              href={project.link}
+              className="group relative inline-flex items-center gap-5 px-8 py-4 border border-primary/20 hover:border-primary/70 text-primary font-mono text-[11px] uppercase tracking-[0.25em] transition-colors duration-400 drop-shadow-[0_0_8px_var(--color-primary-glow)] hover:bg-primary/5"
+            >
+              <span>Execute Sequence</span>
+              <span className="group-hover:translate-x-1.5 transition-transform duration-300">&rarr;</span>
+            </Link>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 }
