@@ -1,0 +1,64 @@
+---
+title: "Ditch the Todo File"
+excerpt: "How abandoning a massive, chaotic todo file for a proper project management tool finally gave me an accurate measure of my development velocity."
+importance: "Regular"
+tags: ["Productivity", "Project Management"]
+date: "2026-05-22"
+excludeFromFeatured: false
+---
+
+Every game developer starts with the simplest tool available. For me, it was a single file named `todo.txt`. 
+
+I dumped everything in there. Feature ideas sat next to critical bug fixes. Random YouTube links to synthwave tracks I wanted to use for boss fights were buried under lists of UI tweaks. The workflow was incredibly basic. When I finished a task, I just typed `--DONE` next to it. 
+
+It felt highly productive at first. You open a file, write down a thought, and close it. The friction is zero.
+
+## Losing Track
+
+The illusion of progress broke down as the game grew. The file became a massive, unreadable scroll of text. 
+
+I could no longer tell what was important. I lost track of dependencies. A task like "fix player jump" might rely on a physics overhaul buried three hundred lines further down the page. I spent more time reading through old `--DONE` entries trying to find my place than actually writing code. 
+
+The flat structure of a text file simply cannot handle the multidimensional nature of game development. I needed a system that understood priority, effort, and categories.
+
+![A screenshot of a chaotic text file filled with tasks and links](/images/placeholders/messy-todo-file.png)
+
+## Codecks to the Rescue
+
+I moved my entire workflow over to Codecks. This platform replaces standard kanban boards with a trading card metaphor designed specifically for game development. The architectural shift instantly changed how I approached the project.
+
+I dismantled my monolithic text document piece by piece. I extracted every single task, rogue idea, and reference link, binding each one to an individual card. I then dealt these cards into specific decks based on their core function. I built a design deck to hold ambient audio tracks, concept art, and mechanical inspiration. I created a dedicated defect deck to strictly isolate game-breaking bugs from routine feature additions. This physical separation of concerns proved crucial. Mixing bugs with new features in a single list inevitably leads to prioritizing fun mechanics over necessary stability.
+
+The visual hierarchy immediately cleared my cognitive load. Codecks allows you to draw specific tasks from your broader decks into a personal hand for the current milestone. I no longer had to parse hundreds of lines of chaotic text just to figure out my morning agenda. I could simply open my dashboard, look at the five active cards sitting in my hand, and immediately start writing C#. The overwhelming noise of the broader project stayed entirely out of sight until I explicitly chose to look at it.
+
+## Assigning Weights
+
+The fundamental flaw of a plain text file is the total lack of temporal context. A task is either pending or complete. This binary state creates a massive psychological trap for developers. You might spend six grueling days writing a custom physics controller and only get to type `--DONE` once. The very next day, you fix three minor typos in a menu and cross off three distinct items. A flat document falsely tells you Tuesday was significantly more productive than your entire previous week.
+
+Moving to a dedicated project tool introduced the concept of weight. I started assigning concrete effort values to every single card before bringing it into my active workspace. A complex database migration gets a high effort score. Swapping a placeholder texture gets a low one. 
+
+This simple requirement forces a moment of honest reflection before any actual programming begins. You have to interrogate the card. You must decide if you actually understand the scope of the problem.
+
+![A close-up view of a Codecks card showing effort estimation points and assignee details](/images/placeholders/effort-estimation-card.png)
+
+## Productivity
+
+Humans are notoriously terrible at estimating software timelines. We naturally assume the best-case scenario where no unforeseen bugs emerge. A robust tracking system acts as a harsh mirror against that optimism. 
+
+When I planned a new combat mechanic, my gut told me it would take two days. Instead of blindly committing to that timeframe, I looked back at my archived decks. The historical data proved that similar combat tweaks consistently took a full week to balance and polish. I stopped guessing. I adjusted my project roadmap immediately to reflect reality.
+
+![A burnup chart demonstrating steady development velocity across multiple project milestones](/images/placeholders/velocity-burnup-chart.png)
+
+This data-driven approach completely changed my relationship with the project. Unrealistic timelines inevitably lead to self-imposed crunch. You end up working late into the night trying to meet a completely arbitrary deadline born from an uneducated guess. 
+
+Tracking an accurate, realistic development velocity established hard boundaries around my time. It revealed exactly how much capacity I actually had in a given week. I stopped fighting my own schedule. The project kept moving forward steadily, and I stopped burning myself out to maintain an impossible pace.
+
+## Making it Look Cool
+
+Visuals matter for organization. A wall of text is fatiguing to read, even when it is broken up into cards. 
+
+I use icons from game-icons.net to categorize different decks and card types. Giving the UI deck a distinct gear icon and the audio deck a waveform symbol makes scanning the board effortless. It gives the project workspace a cohesive, game-ready feel. 
+
+![A screenshot of a clean Codecks dashboard featuring custom icons](/images/placeholders/codecks-dashboard.png)
+
+Managing a game project is hard enough without fighting your own notes. Moving away from a raw text file forced me to treat my development process with the same care I give to my codebase.
