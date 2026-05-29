@@ -1,0 +1,194 @@
+---
+title: "ClaimDefense AI: Accurate LLMs for Medical Appeals"
+excerpt: "When fighting automated insurance denials, a hallucinated medical code means it's a lost claim. Here is how I built a deterministic RAG pipeline to fight back."
+importance: "Featured"
+tags: ["AI", "LLM", "RAG", "Python"]
+date: "2026-05-29"
+excludeFromFeatured: false
+---
+
+Most software is written to automate human effort. Sometimes, though, you have to write software to fight the automation someone else deployed. 
+
+Medical insurance providers are increasingly using algorithms to deny claims at an industrial scale. To fight back, two teammates and I spent a weekend at the Atlanta Divergent Teams Hackathon building a counter-offensive. Patients and medical billing advocates are currently caught in a grinding, manual war of attrition. They burn hours digging through dense PDF policy manuals just to draft a single appeal letter proving a procedure was medically necessary. 
+
+Generic LLMs seem like an obvious silver bullet here, but they fail the reality test. If you ask a standard model to draft an appeal letter, its inherent bias to please you becomes a massive liability. When it cannot find the right clinical guideline, it will simply invent a plausible-sounding CPT code to keep the conversation moving. In the rigid world of medical billing, a hallucinated citation gets an appeal instantly thrown out. 
+
+When we sat down to design ClaimDefense AI, the goal wasn't to build the smartest generative AI. The goal was to build the most constrained one. We needed a Retrieval-Augmented Generation (RAG) system that relies strictly on verified, local medical policy PDFs—a pipeline forced to tell the absolute truth, or refuse to write the letter at all.
+
+## A Deterministic Model
+
+A RAG pipeline is only as reliable as its retrieval phase. If you feed the language model garbage context, no amount of prompt engineering will save the output. 
+
+I decided to run the vector database locally using ChromaDB, paired with Mistral AI Embeddings. The physical folder structure of the source documents dictates the metadata. When the system ingests PDFs via `PyPDFDirectoryLoader`, it reads the file path (e.g., `policies/aetna/guideline.pdf`) and injects the parent folder name as a hard metadata tag.
+
+```python
+# backend.py snippet: Injecting metadata from file paths
+for doc in documents:
+    path_parts = os.path.normpath(doc.metadata.get("source", "")).split(os.sep)
+    if len(path_parts) >= 3:
+        provider_name = path_parts[-2].lower().strip()
+        doc.metadata["provider"] = provider_name
+    else:
+        doc.metadata["provider"] = "general"
+```
+
+This is a defensive engineering choice. Semantic search alone is dangerous in this domain. If an advocate is fighting an Aetna denial, retrieving a highly semantically similar Cigna policy is actively harmful. The metadata tag ensures we can place a hard filter on the query before the vector search even begins.
+
+## Routing and Targeted Retrieval
+
+To make the UI efficient for billing departments, the system needs to operate with minimal user friction. The user pastes the denial text, and the system needs to route the query to the correct policy subset automatically.
+
+I offloaded this routing task to `mistral-small-latest`. It is fast, cheap, and highly capable of strict classification when temperature is dialed down to absolute zero.
+
+```python
+def extract_provider_from_text(denial_reason):
+    llm = ChatMistralAI(
+        mistral_api_key=MISTRAL_API_KEY, 
+        model="mistral-small-latest",
+        temperature=0.0,
+        max_retries=3
+    )
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are an extraction assistant. Read the medical denial text and identify the insurance provider. "
+                   "You MUST map the provider to one of the following exact keys: "
+                   "[aetna, cigna, unitedhealthcare, bluecross, medicare]. "
+                   "Respond ONLY with the exact key string. If unidentifiable, respond with 'unknown'."),
+        ("human", "Denial Text:\n{input}")
+    ])
+    
+    # Execution chain parses out the exact metadata key needed for ChromaDB
+    chain = prompt | llm | StrOutputParser()
+    extracted = chain.invoke({"input": denial_reason}).strip().lower()
+    return re.sub(r'[^\w\s]', '', extracted)
+```
+
+Once we have the provider key, we hit the vector database with a targeted `search_kwargs={"filter": {"provider": provider_key}}`. We only pull the top four most relevant chunks. Narrowing the context window reduces the surface area for the LLM to get confused.
+
+## Mitigating Hallucinations
+
+With the right context isolated, the final step is generation. I used LangChain to orchestrate the prompt, but the real work happens in the system instructions. 
+
+You cannot politely ask an LLM not to hallucinate. You have to box it into a corner. 
+
+```python
+SYSTEM_PROMPT = (
+    "You are an expert medical billing advocate. Your job is to draft an assertive, "
+    "professional appeal letter to overturn an insurance denial.\n\n"
+    "CRITICAL INSTRUCTIONS:\n"
+    "1. You MUST use the provided extracted policy context to justify the medical necessity.\n"
+    "2. You MUST cite the exact policy codes, clinical guidelines, or paragraphs found in the context.\n"
+    "3. You MUST explicitly state the document names and page numbers (provided in the context) that you are using as sources in your response.\n"
+    "4. Do NOT invent, hallucinate, or assume any medical guidelines or CPT codes.\n"
+    ...
+    "- If the retrieved context does not contain relevant policy data to overturn the denial, state: "
+    "'INSUFFICIENT POLICY DATA TO GENERATE APPEAL' and stop.\n\n"
+)
+```
+
+Notice the explicit exit hatch: *INSUFFICIENT POLICY DATA*. Giving the model permission to fail is the most effective way to prevent it from lying. If the local ChromaDB doesn't hold the answer, the agent safely aborts. 
+
+## Assigning the Right Model
+
+When building AI pipelines, there is a temptation to throw the largest, most expensive model at every problem. I quickly learned that is both a waste of compute and a liability for reliability. 
+
+In this system, we have two distinct LLM tasks: metadata extraction and letter drafting. They require entirely different cognitive profiles.
+
+For extracting the insurance provider from a messy denial letter, I deployed `mistral-small-latest` locked at absolute zero temperature. Small models are fantastic at mechanical adherence. They aren't trying to be conversational; they function as strict text processors. When you instruct a smaller model to output exactly "aetna" or "unknown" and nothing else, it complies flawlessly. It doesn't add conversational filler like "Based on the text, the provider is..." which would immediately break the downstream vector search.
+
+```python
+# backend.py snippet: The rigid extraction engine
+def extract_provider_from_text(denial_reason):
+    # The small model is used here for fast, strict classification
+    llm = ChatMistralAI(
+        mistral_api_key=MISTRAL_API_KEY, 
+        model="mistral-small-latest",
+        temperature=0.0,
+        max_retries=3
+    )
+    # ... prompt enforces an exact string match output
+```
+
+Drafting the actual appeal letter, however, is a completely different story. 
+
+I initially wondered if the small model could handle the drafting phase to keep the entire stack lightweight. The reality is that a medical appeal requires rhetorical force. It has to synthesize dense clinical context, format it into a professional narrative, and assert medical necessity with authority. The smaller model produced text that felt too robotic and disjointed. For the heavy lifting, I brought in `mistral-large-latest`.
+
+The known danger of a large model is its inherent creativity. It wants to synthesize and extrapolate to produce a fluid answer. In medical billing, extrapolation is a fatal liability. If it cannot find the exact justification for a specific CPT code, its instruction-following bias might lead it to hallucinate a plausible-sounding clinical rationale just to "help" the user.
+
+To safely harness the large model's reasoning power without risking hallucinations, we don't rely on the model's internal weights. We rely entirely on the system prompt to build a cage around *what* facts it can use.
+
+```python
+# backend.py snippet: The heavy drafting engine
+def chat_with_agent(messages, context_text, patient_name):
+    # The large model handles the nuanced synthesis, heavily constrained by the prompt
+    llm = ChatMistralAI(
+        mistral_api_key=MISTRAL_API_KEY, 
+        model="mistral-large-latest",
+        temperature=0.0
+    )
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", SYSTEM_PROMPT),
+        MessagesPlaceholder(variable_name="messages")
+    ])
+    # ...
+```
+
+By splitting the architecture this way, we get the best of both worlds. The fast, cheap model handles the rigid routing, and the large model handles the complex synthesis—chained to reality by an uncompromising set of rules.
+```python
+# backend.py snippet: The rigid generation engine
+def chat_with_agent(messages, context_text, patient_name):
+    # SWAP: Upgraded speed and adherence by switching to mistral-small-latest. 
+    # Temperature set to 0.0 to ruthlessly enforce zero-hallucination.
+    llm = ChatMistralAI(
+        mistral_api_key=MISTRAL_API_KEY, 
+        model="mistral-small-latest",
+        temperature=0.0
+    )
+    # ...
+```
+
+Smaller models are far less eager to please. When constrained by a strict, rule-heavy system prompt and zero temperature, they stop acting like conversationalists and start acting like rigid text processors. If the semantic match isn't explicitly in the RAG context, the smaller model doesn't try to bridge the gap. It hits the fallback condition—aborting the draft entirely. It trades creative synthesis for mechanical adherence to the prompt boundaries, which is exactly what an enterprise compliance tool needs.
+
+## RAG Chunking Strategy
+
+The effectiveness of that rigid LLM depends entirely on how the source PDFs are digested. Medical policies are not narratives. They are dense, highly formatted documents filled with nested bullet points, exclusionary clauses, and alphanumeric tables. 
+
+Throwing a standard text splitter at a 50-page Medicare guideline destroys the semantic relationships between a condition and its approved treatments. 
+
+```python
+# backend.py snippet: Document chunking logic
+def build_vector_db(policies_dir="policies", persist_dir="./chroma_db_storage"):
+    # ... (loader logic)
+    
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000, 
+        chunk_overlap=200
+    )
+    splits = text_splitter.split_documents(documents)
+    
+    vectorstore = Chroma.from_documents(
+        documents=splits, 
+        embedding=embeddings,
+        persist_directory=persist_dir 
+    )
+    return vectorstore
+```
+
+I utilized LangChain's `RecursiveCharacterTextSplitter` with a chunk size of 1000 characters and an overlap of 200. This specific ratio is highly intentional. 
+
+If you shrink the chunk size to 500 characters to increase retrieval precision, you inadvertently fracture complex medical definitions. The required procedure code ends up in chunk A, while the diagnostic criteria end up in chunk B. When the vector database retrieves only chunk A, the LLM lacks the context to prove medical necessity. 
+
+Conversely, an overlap of 200 characters acts as a safety net. It ensures that a vital policy clause spanning a paragraph boundary or a page break isn't orphaned from its parent heading. 
+
+When the user queries the database, we embed the denial text using `MistralAIEmbeddings` and run a similarity search against these perfectly sized chunks. Because we already filtered the search space using our extracted metadata tags, the chunks retrieved are not just semantically similar—they are guaranteed to belong to the correct insurance provider.
+
+## The Frontend
+
+For the frontend, I used Streamlit. B2B tools shouldn't look like chat bots; they should look like workspaces. 
+
+When the agent successfully drafts an appeal, it wraps the payload in `<FINAL_LETTER>` tags. A regex parser strips these tags out for the final UI presentation. Crucially, the app features an expander labeled "View Sourced Policy Reference Guidelines." 
+
+Users don't trust AI blindly, nor should they. By rendering the exact source document name and the raw text chunk the LLM used to draft the letter right next to the output, the human operator can instantly verify the claim's legal grounding. 
+
+Building practical AI tools is rarely about pushing the boundaries of what models can imagine. It is almost always about putting up guardrails to restrict what they can say. When you control the context and enforce strict boundaries, you stop building toys and start building leverage.

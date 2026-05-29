@@ -68,14 +68,14 @@ export const MDXComponents: MDXComponentsType = {
 
     return (
       <code 
-        className="rounded border border-primary-glow bg-white/5 px-1.5 py-0.5 font-mono text-sm text-secondary backdrop-blur-md" 
+        className="rounded border border-primary-glow bg-white/5 px-1.5 py-0.5 font-mono text-sm text-secondary" 
         {...props} 
       />
     );
   },
   pre: (props) => (
     <pre 
-      className="mb-6 overflow-x-auto rounded-lg border border-primary-glow bg-background/80 p-4 shadow-(--color-primary-glow) backdrop-blur-xl" 
+      className="mb-6 overflow-x-auto rounded-lg border border-primary-glow bg-background/80 p-4 shadow-(--color-primary-glow)" 
       {...props} 
     />
   ),
