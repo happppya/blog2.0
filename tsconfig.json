@@ -27,7 +27,7 @@
         "./src/*"
       ],
       "@canvas/*": [
-        "./src/components/canvas/*"
+        "src/components/canvas-background/*"
       ],
       "@components/*": [
         "./src/components/*"

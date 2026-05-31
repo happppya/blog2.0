@@ -105,7 +105,6 @@ function GravitationalSystem({ effectRef }: { effectRef: React.RefObject<Gravita
   );
 }
 
-
 export default function Scene({ eventSource }: SceneProps) {
   const lensingRef = useRef<GravitationalLensingEffect>(null);
 

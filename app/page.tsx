@@ -1,5 +1,5 @@
 import HeroOverlay from "@/components/home/HeroOverlay";
-import CanvasBackground from "@/components/canvas/CanvasBackground";
+import CanvasBackground from "@/components/canvas-background";
 
 import ArticleClusters from "@/components/home/ArticleFeatures";
 import EcosystemWorkspace from "@/components/home/SkillsAndProjects";
