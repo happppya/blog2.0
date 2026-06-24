@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 
-const Scene = dynamic(() => import("./BlackHoleNew"), { ssr: false });
+const Scene = dynamic(() => import("./BlackHoleOld"), { ssr: false });
 
 /**
  * @description Hero-bound 3D layer. Applies an alpha-mask for void integration 
